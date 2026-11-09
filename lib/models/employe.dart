@@ -1,7 +1,4 @@
-enum StatutPaiement {
-  paye,
-  impaye,
-}
+enum StatutPaiement { paye, impaye }
 
 class PaiementEmploye {
   DateTime datePaiement;
@@ -34,7 +31,7 @@ class Employe {
   String telephone;
   String adresse;
   bool estActif;
-  String photoUrl; // URL locale ou réseau
+  String photoUrl;
   List<PaiementEmploye> paiements;
 
   Employe({
@@ -51,6 +48,38 @@ class Employe {
     required this.photoUrl,
     required this.paiements,
   });
+
+  String get nomComplet => '$nom $prenom';
+
+  Employe copyWith({
+    String? id,
+    String? nom,
+    String? prenom,
+    DateTime? dateNaissance,
+    DateTime? dateEmbauche,
+    String? poste,
+    double? salaire,
+    String? telephone,
+    String? adresse,
+    bool? estActif,
+    String? photoUrl,
+    List<PaiementEmploye>? paiements,
+  }) {
+    return Employe(
+      id: id ?? this.id,
+      nom: nom ?? this.nom,
+      prenom: prenom ?? this.prenom,
+      dateNaissance: dateNaissance ?? this.dateNaissance,
+      dateEmbauche: dateEmbauche ?? this.dateEmbauche,
+      poste: poste ?? this.poste,
+      salaire: salaire ?? this.salaire,
+      telephone: telephone ?? this.telephone,
+      adresse: adresse ?? this.adresse,
+      estActif: estActif ?? this.estActif,
+      photoUrl: photoUrl ?? this.photoUrl,
+      paiements: paiements ?? this.paiements,
+    );
+  }
 }
 
 final Employe emptyEmployee = Employe(

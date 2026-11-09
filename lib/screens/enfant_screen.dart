@@ -3,11 +3,13 @@ import '/models/enfant.dart';
 import '/layout/main_layout.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import '/screens/enfant_profil_screen.dart';
-import '/db/enfant_dao.dart'; 
+import '/db/enfant_dao.dart';
 
 class ListeEnfantsPage extends StatefulWidget {
+  const ListeEnfantsPage({super.key});
+
   @override
-  _ListeEnfantsPageState createState() => _ListeEnfantsPageState();
+  State<ListeEnfantsPage> createState() => _ListeEnfantsPageState();
 }
 
 class _ListeEnfantsPageState extends State<ListeEnfantsPage> {
@@ -40,6 +42,7 @@ class _ListeEnfantsPageState extends State<ListeEnfantsPage> {
 
   Future<void> _loadEnfants() async {
     final enfants = await enfantDao.getAllEnfants();
+    if (!mounted) return;
     setState(() {
       allEnfants = enfants;
       isLoading = false;
@@ -53,7 +56,7 @@ class _ListeEnfantsPageState extends State<ListeEnfantsPage> {
       final matchSearch = selectedFilter == 'Classe'
           ? e.classe.toLowerCase().contains(searchQuery.toLowerCase())
           : e.nom.toLowerCase().contains(searchQuery.toLowerCase()) ||
-              e.prenom.toLowerCase().contains(searchQuery.toLowerCase());
+                e.prenom.toLowerCase().contains(searchQuery.toLowerCase());
 
       // Filtrage par statut (Actif/Inactif/Tout)
       final matchStatus =
@@ -91,9 +94,10 @@ class _ListeEnfantsPageState extends State<ListeEnfantsPage> {
       0,
       filteredEnfants.length,
     );
-    final paginatedEnfants =
-        filteredEnfants.isNotEmpty ? filteredEnfants.sublist(startIndex, endIndex) : [];
-    
+    final paginatedEnfants = filteredEnfants.isNotEmpty
+        ? filteredEnfants.sublist(startIndex, endIndex)
+        : [];
+
     return MainLayout(
       activeRoute: '/enfants',
       child: Focus(
@@ -122,7 +126,7 @@ class _ListeEnfantsPageState extends State<ListeEnfantsPage> {
                   ),
                 ),
               ),
-              
+
               // Barre d'outils avec filtres et boutons
               Wrap(
                 spacing: 8,
@@ -178,7 +182,9 @@ class _ListeEnfantsPageState extends State<ListeEnfantsPage> {
                         ),
                       ),
                       items: ['Nom', 'Classe']
-                          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                          .map(
+                            (e) => DropdownMenuItem(value: e, child: Text(e)),
+                          )
                           .toList(),
                       onChanged: (val) {
                         setState(() {
@@ -237,16 +243,19 @@ class _ListeEnfantsPageState extends State<ListeEnfantsPage> {
                   // Bouton pour ajouter un nouvel enfant
                   ElevatedButton.icon(
                     onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => EnfantProfilScreen(enfant: emptyEnfant),
-                        ),
-                      ).then((value) {
-                        // This callback runs when you return from the EnfantProfilScreen
-                        if (value == true) {
-                          _loadEnfants(); // Reload the list to show the new child immediately
-                        }
-                      });
+                      Navigator.of(context)
+                          .push(
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  EnfantProfilScreen(enfant: emptyEnfant),
+                            ),
+                          )
+                          .then((value) {
+                            // This callback runs when you return from the EnfantProfilScreen
+                            if (value == true) {
+                              _loadEnfants(); // Reload the list to show the new child immediately
+                            }
+                          });
                     },
                     icon: const Icon(Icons.add, size: 30),
                     label: const Text(
@@ -269,7 +278,10 @@ class _ListeEnfantsPageState extends State<ListeEnfantsPage> {
               // EN-TÊTE du tableau
               Container(
                 color: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 12,
+                ),
                 child: Row(
                   children: const [
                     Expanded(
@@ -321,7 +333,10 @@ class _ListeEnfantsPageState extends State<ListeEnfantsPage> {
                     ? Center(
                         child: Text(
                           "Aucun enfant trouvé",
-                          style: TextStyle(fontSize: 18, color: Colors.grey[700]),
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey[700],
+                          ),
                         ),
                       )
                     : ListView.builder(
@@ -331,7 +346,9 @@ class _ListeEnfantsPageState extends State<ListeEnfantsPage> {
                           final isEven = index % 2 == 0;
 
                           return Container(
-                            color: isEven ? const Color(0xFFE2E7F3) : Colors.white,
+                            color: isEven
+                                ? const Color(0xFFE2E7F3)
+                                : Colors.white,
                             padding: const EdgeInsets.symmetric(
                               vertical: 10,
                               horizontal: 12,
@@ -384,17 +401,21 @@ class _ListeEnfantsPageState extends State<ListeEnfantsPage> {
                                           color: Color(0xFF0082EC),
                                         ),
                                         onPressed: () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  EnfantProfilScreen(enfant: enfant),
-                                            ),
-                                          ).then((value) {
-                                            // This callback runs when you return from the EnfantProfilScreen
-                                            if (value == true) {
-                                              _loadEnfants(); // Reload the list to show updated data
-                                            }
-                                          });
+                                          Navigator.of(context)
+                                              .push(
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      EnfantProfilScreen(
+                                                        enfant: enfant,
+                                                      ),
+                                                ),
+                                              )
+                                              .then((value) {
+                                                // This callback runs when you return from the EnfantProfilScreen
+                                                if (value == true) {
+                                                  _loadEnfants(); // Reload the list to show updated data
+                                                }
+                                              });
                                         },
                                       ),
                                       IconButton(
@@ -407,21 +428,32 @@ class _ListeEnfantsPageState extends State<ListeEnfantsPage> {
                                             context: context,
                                             builder: (BuildContext context) {
                                               return AlertDialog(
-                                                title: const Text('Confirmation'),
+                                                title: const Text(
+                                                  'Confirmation',
+                                                ),
                                                 content: const Text(
-                                                    'Voulez-vous vraiment supprimer cet enfant ?'),
+                                                  'Voulez-vous vraiment supprimer cet enfant ?',
+                                                ),
                                                 actions: [
                                                   TextButton(
                                                     onPressed: () =>
-                                                        Navigator.of(context).pop(false),
-                                                    child: const Text('Annuler'),
+                                                        Navigator.of(
+                                                          context,
+                                                        ).pop(false),
+                                                    child: const Text(
+                                                      'Annuler',
+                                                    ),
                                                   ),
                                                   TextButton(
                                                     onPressed: () =>
-                                                        Navigator.of(context).pop(true),
+                                                        Navigator.of(
+                                                          context,
+                                                        ).pop(true),
                                                     child: const Text(
                                                       'Confirmer',
-                                                      style: TextStyle(color: Colors.red),
+                                                      style: TextStyle(
+                                                        color: Colors.red,
+                                                      ),
                                                     ),
                                                   ),
                                                 ],
@@ -430,7 +462,9 @@ class _ListeEnfantsPageState extends State<ListeEnfantsPage> {
                                           );
 
                                           if (confirm == true) {
-                                            await enfantDao.deleteEnfant(enfant.id);
+                                            await enfantDao.deleteEnfant(
+                                              enfant.id,
+                                            );
                                             _loadEnfants(); // recharge la liste
                                           }
                                         },
@@ -462,7 +496,8 @@ class _ListeEnfantsPageState extends State<ListeEnfantsPage> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.chevron_right),
-                      onPressed: (currentPage + 1) * itemsPerPage <
+                      onPressed:
+                          (currentPage + 1) * itemsPerPage <
                               filteredEnfants.length
                           ? () => setState(() => currentPage++)
                           : null,

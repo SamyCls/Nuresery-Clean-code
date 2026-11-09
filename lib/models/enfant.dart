@@ -6,39 +6,37 @@ class Enfant {
   final String telephone;
   bool estActif;
 
-  // Infos supplémentaires du profil
+  // Additional profile information
   final String? dateNaissance;
   final String? sexe;
   final String? adresse;
-  String? photoPath; // Peut être un path local ou une URL
+  String? photoPath;
 
-  // Date d’inscription
+  // Registration date
   DateTime? dateInscription;
 
-  // Infos du père
+  // Father's information
   final String? nomPrenomPere;
   final String? telPere;
   final String? professionPere;
   final String? adressePere;
 
-  // Infos de la mère
+  // Mother's information
   final String? nomPrenomMere;
   final String? telMere;
   final String? professionMere;
   final String? statutFamilial;
 
-  // Infos santé
+  // Health information
   final String? allergies;
   final String? commentairesMedicaux;
-  final String? dossierMedicalPath; // PDF ou image
+  final String? dossierMedicalPath;
 
-  // Paiements
+  // Payments and attendance history
   final List<Paiement>? paiements;
-
-  // Historique de présence
   final Map<DateTime, String>? historiquePresence;
 
-  // ✅ Progression scolaire
+  // Academic progression
   List<Evaluation>? evaluations;
 
   Enfant({
@@ -66,18 +64,70 @@ class Enfant {
     this.dossierMedicalPath,
     this.historiquePresence,
     this.paiements,
-    this.evaluations, // 👈 ajouté
+    this.evaluations,
   });
 
   String get nomComplet => '$nom $prenom';
   String get statut => estActif ? 'ACTIF' : 'INACTIF';
+
+  Enfant copyWith({
+    String? id,
+    String? nom,
+    String? prenom,
+    String? classe,
+    String? telephone,
+    bool? estActif,
+    String? dateNaissance,
+    String? sexe,
+    String? adresse,
+    String? photoPath,
+    DateTime? dateInscription,
+    String? nomPrenomPere,
+    String? telPere,
+    String? professionPere,
+    String? adressePere,
+    String? nomPrenomMere,
+    String? telMere,
+    String? professionMere,
+    String? statutFamilial,
+    String? allergies,
+    String? commentairesMedicaux,
+    String? dossierMedicalPath,
+    List<Paiement>? paiements,
+    Map<DateTime, String>? historiquePresence,
+    List<Evaluation>? evaluations,
+  }) {
+    return Enfant(
+      id: id ?? this.id,
+      nom: nom ?? this.nom,
+      prenom: prenom ?? this.prenom,
+      classe: classe ?? this.classe,
+      telephone: telephone ?? this.telephone,
+      estActif: estActif ?? this.estActif,
+      dateNaissance: dateNaissance ?? this.dateNaissance,
+      sexe: sexe ?? this.sexe,
+      adresse: adresse ?? this.adresse,
+      photoPath: photoPath ?? this.photoPath,
+      dateInscription: dateInscription ?? this.dateInscription,
+      nomPrenomPere: nomPrenomPere ?? this.nomPrenomPere,
+      telPere: telPere ?? this.telPere,
+      professionPere: professionPere ?? this.professionPere,
+      adressePere: adressePere ?? this.adressePere,
+      nomPrenomMere: nomPrenomMere ?? this.nomPrenomMere,
+      telMere: telMere ?? this.telMere,
+      professionMere: professionMere ?? this.professionMere,
+      statutFamilial: statutFamilial ?? this.statutFamilial,
+      allergies: allergies ?? this.allergies,
+      commentairesMedicaux: commentairesMedicaux ?? this.commentairesMedicaux,
+      dossierMedicalPath: dossierMedicalPath ?? this.dossierMedicalPath,
+      paiements: paiements ?? this.paiements,
+      historiquePresence: historiquePresence ?? this.historiquePresence,
+      evaluations: evaluations ?? this.evaluations,
+    );
+  }
 }
 
-enum StatutPaiements {
-  paye,
-  impaye,
-  partiel,
-}
+enum StatutPaiements { paye, impaye, partiel }
 
 class Paiement {
   final DateTime date;
@@ -97,18 +147,16 @@ class Paiement {
   });
 }
 
-// ✅ Modèle pour les évaluations
-// In your models/enfant.dart file
 class Evaluation {
   final String enfantId;
-  final DateTime date;  // Add date field
-  String competence;   
-  bool valeur;         
-  String? texte;       
+  final DateTime date;
+  String competence;
+  bool valeur;
+  String? texte;
 
   Evaluation({
     required this.enfantId,
-    required this.date,  // Add date parameter
+    required this.date,
     required this.competence,
     this.valeur = false,
     this.texte,
@@ -117,7 +165,7 @@ class Evaluation {
   Map<String, dynamic> toMap() {
     return {
       'enfantId': enfantId,
-      'date': date.millisecondsSinceEpoch,  // Store as timestamp
+      'date': date.millisecondsSinceEpoch,
       'competence': competence,
       'valeur': valeur ? 1 : 0,
       'texte': texte,
@@ -126,15 +174,19 @@ class Evaluation {
 
   factory Evaluation.fromMap(Map<String, dynamic> map) {
     return Evaluation(
-      enfantId: map['enfantId'],
-      date: DateTime.fromMillisecondsSinceEpoch(map['date']),  // Convert from timestamp
-      competence: map['competence'],
+      enfantId: map['enfantId'] as String? ?? '',
+      date: DateTime.fromMillisecondsSinceEpoch(
+        map['date'] is int
+            ? map['date'] as int
+            : int.tryParse(map['date'].toString()) ?? 0,
+      ),
+      competence: map['competence'] as String? ?? '',
       valeur: map['valeur'] == 1,
-      texte: map['texte'],
+      texte: map['texte'] as String?,
     );
   }
 }
-// Exemple d’enfant vide
+
 final emptyEnfant = Enfant(
   id: '',
   nom: '',
@@ -157,5 +209,5 @@ final emptyEnfant = Enfant(
   statutFamilial: '',
   allergies: '',
   commentairesMedicaux: '',
-  evaluations: [], // 👈 initialisé vide
+  evaluations: [],
 );

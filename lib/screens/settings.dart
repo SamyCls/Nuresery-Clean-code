@@ -4,13 +4,13 @@ import '/models/utilisateurs.dart';
 import '/db/usersdao.dart';
 
 // ── Palette ────────────────────────────────────────────────────────────────
-const _kBg       = Color(0xFFF4F6FB);
-const _kCard     = Colors.white;
-const _kAccent   = Color(0xFF4A6CF7);
+const _kBg = Color(0xFFF4F6FB);
+const _kCard = Colors.white;
+const _kAccent = Color(0xFF4A6CF7);
 const _kAdminClr = Color(0xFFE53E3E);
-const _kBorder   = Color(0xFFE4E7F0);
-const _kLabel    = Color(0xFF8A94A6);
-const _kTitle    = Color(0xFF1A1D27);
+const _kBorder = Color(0xFFE4E7F0);
+const _kLabel = Color(0xFF8A94A6);
+const _kTitle = Color(0xFF1A1D27);
 
 class ParametersScreen extends StatefulWidget {
   const ParametersScreen({super.key});
@@ -21,7 +21,7 @@ class ParametersScreen extends StatefulWidget {
 
 class _ParametersScreenState extends State<ParametersScreen> {
   final UserDao _userDao = UserDao();
-  List<AppUser> _adminUsers    = [];
+  List<AppUser> _adminUsers = [];
   List<AppUser> _standardUsers = [];
   bool _isLoading = true;
 
@@ -64,7 +64,7 @@ class _ParametersScreenState extends State<ParametersScreen> {
     try {
       final allUsers = await _userDao.getAllUsers();
       setState(() {
-        _adminUsers    = allUsers.where((u) => u.isAdmin).toList();
+        _adminUsers = allUsers.where((u) => u.isAdmin).toList();
         _standardUsers = allUsers.where((u) => u.isStandard).toList();
         _isLoading = false;
       });
@@ -76,35 +76,52 @@ class _ParametersScreenState extends State<ParametersScreen> {
 
   // ── Dialogs ───────────────────────────────────────────────────────────────
 
-  void _showAddUserDialog({UserRole role = UserRole.standard, AppUser? existingUser}) {
-    final usernameCtrl        = TextEditingController(text: existingUser?.username ?? '');
-    final passwordCtrl        = TextEditingController();
+  void _showAddUserDialog({
+    UserRole role = UserRole.standard,
+    AppUser? existingUser,
+  }) {
+    final usernameCtrl = TextEditingController(
+      text: existingUser?.username ?? '',
+    );
+    final passwordCtrl = TextEditingController();
     final confirmPasswordCtrl = TextEditingController();
-    UserRole selectedRole     = existingUser?.role ?? role;
-    bool showPassword         = false;
-    bool showConfirm          = false;
+    UserRole selectedRole = existingUser?.role ?? role;
+    bool showPassword = false;
+    bool showConfirm = false;
 
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlg) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
           title: Row(
             children: [
               Container(
-                width: 36, height: 36,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
-                  color: _kAccent.withOpacity(0.12),
+                  color: _kAccent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.person_add_alt_1, color: _kAccent, size: 20),
+                child: const Icon(
+                  Icons.person_add_alt_1,
+                  color: _kAccent,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Text(
-                existingUser == null ? 'Ajouter un utilisateur' : 'Modifier l\'utilisateur',
+                existingUser == null
+                    ? 'Ajouter un utilisateur'
+                    : 'Modifier l\'utilisateur',
                 style: const TextStyle(
-                    fontSize: 17, fontWeight: FontWeight.bold, color: _kTitle),
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: _kTitle,
+                ),
               ),
             ],
           ),
@@ -130,9 +147,12 @@ class _ParametersScreenState extends State<ParametersScreen> {
                     obscure: !showPassword,
                     suffix: IconButton(
                       icon: Icon(
-                          showPassword ? Icons.visibility : Icons.visibility_off,
-                          color: _kLabel, size: 20),
-                      onPressed: () => setDlg(() => showPassword = !showPassword),
+                        showPassword ? Icons.visibility : Icons.visibility_off,
+                        color: _kLabel,
+                        size: 20,
+                      ),
+                      onPressed: () =>
+                          setDlg(() => showPassword = !showPassword),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -143,22 +163,29 @@ class _ParametersScreenState extends State<ParametersScreen> {
                     obscure: !showConfirm,
                     suffix: IconButton(
                       icon: Icon(
-                          showConfirm ? Icons.visibility : Icons.visibility_off,
-                          color: _kLabel, size: 20),
+                        showConfirm ? Icons.visibility : Icons.visibility_off,
+                        color: _kLabel,
+                        size: 20,
+                      ),
                       onPressed: () => setDlg(() => showConfirm = !showConfirm),
                     ),
                   ),
                   const SizedBox(height: 14),
                   DropdownButtonFormField<UserRole>(
-                    value: selectedRole,
+                    initialValue: selectedRole,
                     decoration: InputDecoration(
                       labelText: 'Rôle',
                       prefixIcon: const Icon(
-                          Icons.admin_panel_settings_outlined, color: _kLabel, size: 20),
+                        Icons.admin_panel_settings_outlined,
+                        color: _kLabel,
+                        size: 20,
+                      ),
                       filled: true,
                       fillColor: const Color(0xFFF8F9FC),
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 14),
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: const BorderSide(color: _kBorder),
@@ -168,11 +195,21 @@ class _ParametersScreenState extends State<ParametersScreen> {
                         borderSide: const BorderSide(color: _kBorder),
                       ),
                     ),
-                    items: UserRole.values.map((r) => DropdownMenuItem(
-                      value: r,
-                      child: Text(r == UserRole.admin ? 'Administrateur' : 'Standard'),
-                    )).toList(),
-                    onChanged: (r) { if (r != null) setDlg(() => selectedRole = r); },
+                    items: UserRole.values
+                        .map(
+                          (r) => DropdownMenuItem(
+                            value: r,
+                            child: Text(
+                              r == UserRole.admin
+                                  ? 'Administrateur'
+                                  : 'Standard',
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (r) {
+                      if (r != null) setDlg(() => selectedRole = r);
+                    },
                   ),
                 ],
               ),
@@ -186,25 +223,31 @@ class _ParametersScreenState extends State<ParametersScreen> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: _kAccent,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
               ),
               onPressed: () async {
                 if (usernameCtrl.text.isEmpty) {
-                  _snack(ctx, 'Le nom d\'utilisateur est requis');
+                  _snack('Le nom d\'utilisateur est requis');
                   return;
                 }
                 if (existingUser == null && passwordCtrl.text.isEmpty) {
-                  _snack(ctx, 'Le mot de passe est requis');
+                  _snack('Le mot de passe est requis');
                   return;
                 }
                 if (passwordCtrl.text != confirmPasswordCtrl.text) {
-                  _snack(ctx, 'Les mots de passe ne correspondent pas');
+                  _snack('Les mots de passe ne correspondent pas');
                   return;
                 }
                 try {
                   final newUser = AppUser(
-                    id: existingUser?.id ??
+                    id:
+                        existingUser?.id ??
                         DateTime.now().millisecondsSinceEpoch.toString(),
                     username: usernameCtrl.text.trim(),
                     password: passwordCtrl.text.isNotEmpty
@@ -214,15 +257,17 @@ class _ParametersScreenState extends State<ParametersScreen> {
                   );
                   if (existingUser == null) {
                     await _userDao.insertUser(newUser);
-                    _snack(ctx, 'Utilisateur ajouté avec succès');
+                    _snack('Utilisateur ajouté avec succès');
                   } else {
                     await _userDao.updateUser(newUser);
-                    _snack(ctx, 'Utilisateur modifié avec succès');
+                    _snack('Utilisateur modifié avec succès');
                   }
-                  Navigator.pop(ctx);
+                  if (ctx.mounted) {
+                    Navigator.pop(ctx);
+                  }
                   _loadUsers();
                 } catch (e) {
-                  _snack(ctx, 'Erreur : ${e.toString()}');
+                  _snack('Erreur : ${e.toString()}');
                 }
               },
               child: Text(
@@ -245,9 +290,14 @@ class _ParametersScreenState extends State<ParametersScreen> {
           children: [
             Icon(Icons.warning_amber_rounded, color: _kAdminClr, size: 26),
             SizedBox(width: 10),
-            Text('Confirmer la suppression',
-                style: TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.bold, color: _kTitle)),
+            Text(
+              'Confirmer la suppression',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: _kTitle,
+              ),
+            ),
           ],
         ),
         content: Text(
@@ -262,19 +312,26 @@ class _ParametersScreenState extends State<ParametersScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: _kAdminClr,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             onPressed: () async {
               try {
                 await _userDao.deleteUser(user.id);
-                _snack(ctx, 'Utilisateur supprimé');
-                Navigator.pop(ctx);
+                _snack('Utilisateur supprimé');
+                if (ctx.mounted) {
+                  Navigator.pop(ctx);
+                }
                 _loadUsers();
               } catch (e) {
-                _snack(ctx, 'Erreur : ${e.toString()}');
+                _snack('Erreur : ${e.toString()}');
               }
             },
-            child: const Text('Supprimer', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Supprimer',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -299,8 +356,10 @@ class _ParametersScreenState extends State<ParametersScreen> {
         suffixIcon: suffix,
         filled: true,
         fillColor: const Color(0xFFF8F9FC),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: _kBorder),
@@ -323,7 +382,7 @@ class _ParametersScreenState extends State<ParametersScreen> {
         border: Border.all(color: _kBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -353,9 +412,10 @@ class _ParametersScreenState extends State<ParametersScreen> {
 
   Widget _sectionIcon(IconData icon, Color color) {
     return Container(
-      width: 38, height: 38,
+      width: 38,
+      height: 38,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Icon(icon, color: color, size: 20),
@@ -387,14 +447,19 @@ class _ParametersScreenState extends State<ParametersScreen> {
               const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Language & Region',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: _kTitle)),
+                  Text(
+                    'Language & Region',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: _kTitle,
+                    ),
+                  ),
                   SizedBox(height: 2),
-                  Text('Set your preferred language and time zone',
-                      style: TextStyle(fontSize: 12, color: _kLabel)),
+                  Text(
+                    'Set your preferred language and time zone',
+                    style: TextStyle(fontSize: 12, color: _kLabel),
+                  ),
                 ],
               ),
             ],
@@ -402,12 +467,17 @@ class _ParametersScreenState extends State<ParametersScreen> {
           const SizedBox(height: 20),
           const Divider(color: _kBorder, height: 1),
           const SizedBox(height: 20),
-          const Text('Language',
-              style: TextStyle(
-                  fontSize: 13, color: _kLabel, fontWeight: FontWeight.w600)),
+          const Text(
+            'Language',
+            style: TextStyle(
+              fontSize: 13,
+              color: _kLabel,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: _selectedLanguage,
+            initialValue: _selectedLanguage,
             decoration: _dropDeco(),
             items: _languages
                 .map((l) => DropdownMenuItem(value: l, child: Text(l)))
@@ -419,12 +489,17 @@ class _ParametersScreenState extends State<ParametersScreen> {
             },
           ),
           const SizedBox(height: 18),
-          const Text('Time Zone',
-              style: TextStyle(
-                  fontSize: 13, color: _kLabel, fontWeight: FontWeight.w600)),
+          const Text(
+            'Time Zone',
+            style: TextStyle(
+              fontSize: 13,
+              color: _kLabel,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: _selectedTimezone,
+            initialValue: _selectedTimezone,
             decoration: _dropDeco(),
             items: _timezones
                 .map((tz) => DropdownMenuItem(value: tz, child: Text(tz)))
@@ -444,7 +519,7 @@ class _ParametersScreenState extends State<ParametersScreen> {
 
   Widget _buildUserSection(String title, List<AppUser> users, UserRole role) {
     final isAdmin = role == UserRole.admin;
-    final accent  = isAdmin ? _kAdminClr : _kAccent;
+    final accent = isAdmin ? _kAdminClr : _kAccent;
 
     return _card(
       child: Column(
@@ -460,25 +535,33 @@ class _ParametersScreenState extends State<ParametersScreen> {
                     accent,
                   ),
                   const SizedBox(width: 12),
-                  Text(title,
-                      style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: _kTitle)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: _kTitle,
+                    ),
+                  ),
                 ],
               ),
               ElevatedButton.icon(
                 onPressed: () => _showAddUserDialog(role: role),
                 icon: const Icon(Icons.add, size: 16, color: Colors.white),
-                label: const Text('Ajouter',
-                    style: TextStyle(color: Colors.white, fontSize: 13)),
+                label: const Text(
+                  'Ajouter',
+                  style: TextStyle(color: Colors.white, fontSize: 13),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: accent,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 10),
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ],
@@ -504,13 +587,19 @@ class _ParametersScreenState extends State<ParametersScreen> {
               ),
               child: Column(
                 children: [
-                  Icon(Icons.person_off_outlined,
-                      size: 36, color: Colors.grey.shade400),
+                  Icon(
+                    Icons.person_off_outlined,
+                    size: 36,
+                    color: Colors.grey.shade400,
+                  ),
                   const SizedBox(height: 8),
-                  Text('Aucun utilisateur',
-                      style: TextStyle(
-                          color: Colors.grey.shade500,
-                          fontStyle: FontStyle.italic)),
+                  Text(
+                    'Aucun utilisateur',
+                    style: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
                 ],
               ),
             )
@@ -536,9 +625,9 @@ class _ParametersScreenState extends State<ParametersScreen> {
     return Container(
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
-        color: accent.withOpacity(0.06),
+        color: accent.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: accent.withOpacity(0.25), width: 1.5),
+        border: Border.all(color: accent.withValues(alpha: 0.25), width: 1.5),
       ),
       child: Stack(
         children: [
@@ -551,15 +640,16 @@ class _ParametersScreenState extends State<ParametersScreen> {
                 children: [
                   CircleAvatar(
                     radius: 16,
-                    backgroundColor: accent.withOpacity(0.15),
+                    backgroundColor: accent.withValues(alpha: 0.15),
                     child: Text(
                       user.username.isNotEmpty
                           ? user.username[0].toUpperCase()
                           : '?',
                       style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: accent),
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: accent,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 5),
@@ -569,24 +659,28 @@ class _ParametersScreenState extends State<ParametersScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 11,
-                        color: _kTitle),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                      color: _kTitle,
+                    ),
                   ),
                   const SizedBox(height: 3),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 1),
+                      horizontal: 6,
+                      vertical: 1,
+                    ),
                     decoration: BoxDecoration(
-                      color: accent.withOpacity(0.15),
+                      color: accent.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       user.isAdmin ? 'Admin' : 'Standard',
                       style: TextStyle(
-                          fontSize: 9,
-                          color: accent,
-                          fontWeight: FontWeight.w600),
+                        fontSize: 9,
+                        color: accent,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -594,14 +688,21 @@ class _ParametersScreenState extends State<ParametersScreen> {
             ),
           ),
           Positioned(
-            top: 4, right: 4,
+            top: 4,
+            right: 4,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _miniIcon(Icons.edit, _kAccent,
-                    () => _showAddUserDialog(existingUser: user)),
-                _miniIcon(Icons.delete, _kAdminClr,
-                    () => _showDeleteConfirmation(user)),
+                _miniIcon(
+                  Icons.edit,
+                  _kAccent,
+                  () => _showAddUserDialog(existingUser: user),
+                ),
+                _miniIcon(
+                  Icons.delete,
+                  _kAdminClr,
+                  () => _showDeleteConfirmation(user),
+                ),
               ],
             ),
           ),
@@ -622,14 +723,19 @@ class _ParametersScreenState extends State<ParametersScreen> {
               const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Data Management',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: _kTitle)),
+                  Text(
+                    'Data Management',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: _kTitle,
+                    ),
+                  ),
                   SizedBox(height: 2),
-                  Text('Export, import or backup your data',
-                      style: TextStyle(fontSize: 12, color: _kLabel)),
+                  Text(
+                    'Export, import or backup your data',
+                    style: TextStyle(fontSize: 12, color: _kLabel),
+                  ),
                 ],
               ),
             ],
@@ -639,7 +745,9 @@ class _ParametersScreenState extends State<ParametersScreen> {
           const SizedBox(height: 20),
           Row(
             children: [
-              Expanded(child: _dataButton(Icons.upload_file, 'Export All Data')),
+              Expanded(
+                child: _dataButton(Icons.upload_file, 'Export All Data'),
+              ),
               const SizedBox(width: 12),
               Expanded(child: _dataButton(Icons.download, 'Import Data')),
               const SizedBox(width: 12),
@@ -654,9 +762,9 @@ class _ParametersScreenState extends State<ParametersScreen> {
   Widget _dataButton(IconData icon, String label) {
     return OutlinedButton(
       onPressed: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$label — bientôt disponible')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$label — bientôt disponible')));
       },
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 14),
@@ -669,19 +777,22 @@ class _ParametersScreenState extends State<ParametersScreen> {
         children: [
           Icon(icon, size: 17, color: _kAccent),
           const SizedBox(width: 8),
-          Text(label,
-              style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: _kTitle)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: _kTitle,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  void _snack(BuildContext ctx, String msg) {
-    ScaffoldMessenger.of(ctx)
-        .showSnackBar(SnackBar(content: Text(msg)));
+  void _snack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────
@@ -702,17 +813,23 @@ class _ParametersScreenState extends State<ParametersScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Settings',
-                style: TextStyle(
-                    color: _kTitle,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 22)),
+            Text(
+              'Settings',
+              style: TextStyle(
+                color: _kTitle,
+                fontWeight: FontWeight.bold,
+                fontSize: 22,
+              ),
+            ),
             SizedBox(height: 2),
-            Text('Manage your application preferences',
-                style: TextStyle(
-                    color: _kLabel,
-                    fontSize: 13,
-                    fontWeight: FontWeight.normal)),
+            Text(
+              'Manage your application preferences',
+              style: TextStyle(
+                color: _kLabel,
+                fontSize: 13,
+                fontWeight: FontWeight.normal,
+              ),
+            ),
           ],
         ),
         iconTheme: const IconThemeData(color: _kTitle),
@@ -722,15 +839,20 @@ class _ParametersScreenState extends State<ParametersScreen> {
             child: ElevatedButton.icon(
               onPressed: _loadUsers,
               icon: const Icon(Icons.refresh, size: 16, color: Colors.white),
-              label: const Text('Actualiser',
-                  style: TextStyle(color: Colors.white, fontSize: 13)),
+              label: const Text(
+                'Actualiser',
+                style: TextStyle(color: Colors.white, fontSize: 13),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _kAccent,
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 10),
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
           ),
@@ -749,12 +871,18 @@ class _ParametersScreenState extends State<ParametersScreen> {
                 children: [
                   Expanded(
                     child: _buildUserSection(
-                        'Administrateurs', _adminUsers, UserRole.admin),
+                      'Administrateurs',
+                      _adminUsers,
+                      UserRole.admin,
+                    ),
                   ),
                   const SizedBox(width: 20),
                   Expanded(
                     child: _buildUserSection(
-                        'Utilisateurs Standard', _standardUsers, UserRole.standard),
+                      'Utilisateurs Standard',
+                      _standardUsers,
+                      UserRole.standard,
+                    ),
                   ),
                 ],
               ),

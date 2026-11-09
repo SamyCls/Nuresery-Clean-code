@@ -24,7 +24,7 @@ final List<Enfant> dummyEnfants = <Enfant>[
     telMere: '0560123456',
     professionMere: 'Enseignante',
     statutFamilial: 'Mariés',
-   
+
     allergies: 'Aucune',
     commentairesMedicaux: 'RAS',
     historiquePresence: {
@@ -52,7 +52,7 @@ final List<Enfant> dummyEnfants = <Enfant>[
     telMere: '0550771122',
     professionMere: 'Pharmacienne',
     statutFamilial: 'Mariés',
-   
+
     allergies: 'Pollen',
     commentairesMedicaux: 'Utilise un spray en cas de crise',
     historiquePresence: {
@@ -80,7 +80,7 @@ final List<Enfant> dummyEnfants = <Enfant>[
     telMere: '0560112299',
     professionMere: 'Coiffeuse',
     statutFamilial: 'Divorcés',
-    
+
     allergies: 'Lait',
     commentairesMedicaux: 'Doit éviter les produits laitiers',
     historiquePresence: {
@@ -117,7 +117,7 @@ final List<Enfant> dummyEnfants = <Enfant>[
       DateTime(2025, 8, 3): "Présent",
       DateTime(2025, 8, 4): "Absent",
     },
-     paiements: [
+    paiements: [
       Paiement(
         date: DateTime(2025, 7, 10),
         mois: 'Juillet 2025',
@@ -155,7 +155,7 @@ final List<Enfant> dummyEnfants = <Enfant>[
     telMere: '0560345678',
     professionMere: 'Avocate',
     statutFamilial: 'Mariés',
- 
+
     allergies: '',
     commentairesMedicaux: 'RAS',
     historiquePresence: {
@@ -165,10 +165,6 @@ final List<Enfant> dummyEnfants = <Enfant>[
       DateTime(2025, 8, 4): "Présent",
     },
   ),
-
-
-
-
 
   Enfant(
     id: '1',
@@ -189,7 +185,7 @@ final List<Enfant> dummyEnfants = <Enfant>[
     telMere: '0555987654',
     professionMere: 'Médecin',
     statutFamilial: 'Mariés',
-   
+
     allergies: 'Arachides',
     commentairesMedicaux: 'Doit porter un bracelet anti-allergie.',
     dossierMedicalPath: 'assets/dossiers/yasmine_medical.pdf',
@@ -199,12 +195,12 @@ final List<Enfant> dummyEnfants = <Enfant>[
       DateTime(2025, 8, 3): "Présent",
       DateTime(2025, 8, 4): "Présent",
     },
-   paiements: [
+    paiements: [
       Paiement(
         date: DateTime(2025, 7, 5),
         mois: 'Juillet 2025',
         montantPaye: 5000,
-                montantdu: 5000,
+        montantdu: 5000,
 
         reste: 0,
         statut: StatutPaiements.paye,
@@ -213,7 +209,7 @@ final List<Enfant> dummyEnfants = <Enfant>[
         date: DateTime(2025, 6, 5),
         mois: 'Juin 2025',
         montantPaye: 2000,
-                montantdu: 5000,
+        montantdu: 5000,
 
         reste: 3000,
         statut: StatutPaiements.partiel,
@@ -222,18 +218,16 @@ final List<Enfant> dummyEnfants = <Enfant>[
         date: DateTime(2025, 5, 5),
         mois: 'Mai 2025',
         montantPaye: 0,
-                montantdu: 5000,
+        montantdu: 5000,
 
         reste: 5000,
         statut: StatutPaiements.impaye,
       ),
     ],
   ),
-  
 ];
 
-
-/// enfant vide pour la creation d un objet 
+/// enfant vide pour la creation d un objet
 final emptyEnfant = Enfant(
   id: '',
   nom: '',
@@ -256,7 +250,6 @@ final emptyEnfant = Enfant(
   allergies: '',
   commentairesMedicaux: '',
 );
-
 
 // ---------------- Dummy employés ----------------
 
@@ -447,22 +440,6 @@ List<Employe> dummyEmployes = [
     paiements: [],
   ),
 ];
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 List<Activity> activities = [
   // Monday - Classe A
@@ -674,8 +651,6 @@ List<Activity> activities = [
   // (I've shown the pattern for Monday-Wednesday, you can continue similarly)
 ];
 
-
-
 List<Depense> dummyDepenses = [
   Depense(
     id: 'd1',
@@ -839,37 +814,15 @@ List<Depense> dummyDepenses = [
   ),
 ];
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// dummydata/dummy_users.dart
-
-
-final dummyUsers = [
-  AppUser(
+// Dummy users for demo/testing fallback
+final List<AppUser> dummyUsers = [
+  const AppUser(
     id: "1",
     username: "admin",
     password: "1234",
     role: UserRole.admin,
   ),
-  AppUser(
+  const AppUser(
     id: "2",
     username: "user1",
     password: "abcd",

@@ -20,15 +20,15 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
 
   @override
-  void initState() {
-    super.initState();
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   Future<void> _login() async {
     if (mounted) {
-      setState(() {
-        _isLoading = true;
-      });
+      setState(() => _isLoading = true);
     }
 
     final String username = _usernameController.text.trim();
@@ -39,84 +39,84 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Veuillez remplir tous les champs")),
         );
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
       return;
     }
 
     try {
-      // 1. D'abord essayer avec la base de données
+      // 1. Authenticate against database
       final AppUser? dbUser = await _userDao.authenticate(username, password);
-      
+
       if (dbUser != null) {
         _handleSuccessfulLogin(dbUser);
         return;
       }
 
-      // 2. Si pas trouvé en base, essayer avec les données dummy (pour la démo)
+      // 2. Fallback to demo dummy data if not found in database
       final dummyUser = dummyUsers.firstWhere(
         (u) => u.username == username && u.password == password,
-        orElse: () => AppUser(id: '', username: '', password: '', role: UserRole.standard),
+        orElse: () => const AppUser(
+          id: '',
+          username: '',
+          password: '',
+          role: UserRole.standard,
+        ),
       );
 
       if (dummyUser.id.isNotEmpty) {
         _handleSuccessfulLogin(dummyUser);
-        
-        // Optionnel: Ajouter l'utilisateur dummy à la base de données
         await _userDao.insertUser(dummyUser);
         return;
       }
 
-      // 3. Si aucun des deux ne fonctionne
+      // 3. Invalid credentials
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Identifiant ou mot de passe incorrect")),
+          const SnackBar(
+            content: Text("Identifiant ou mot de passe incorrect"),
+          ),
         );
       }
-
     } catch (e) {
-      debugPrint('Erreur de connexion: $e');
+      debugPrint('Login error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Erreur de connexion, veuillez réessayer")),
+          const SnackBar(
+            content: Text("Erreur de connexion, veuillez réessayer"),
+          ),
         );
       }
     } finally {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
     }
   }
 
-   void _handleSuccessfulLogin(AppUser user) {
-    // Stocker l'utilisateur dans la variable globale
+  void _handleSuccessfulLogin(AppUser user) {
     currentUser = user;
-    
-    debugPrint('Utilisateur connecté: ${user.username}, Role: ${user.role}');
-    
-    // Rediriger vers Dashboard
+
+    if (!mounted) return;
+
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => DashboardPage(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            DashboardPage(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const beginOffset = Offset(0.0, 1.0);
           const endOffset = Offset.zero;
           const curve = Curves.easeInOut;
 
-          final tween = Tween(begin: beginOffset, end: endOffset)
-              .chain(CurveTween(curve: curve));
+          final tween = Tween(
+            begin: beginOffset,
+            end: endOffset,
+          ).chain(CurveTween(curve: curve));
 
           return SlideTransition(
             position: animation.drive(tween),
-            child: FadeTransition(
-              opacity: animation,
-              child: child,
-            ),
+            child: FadeTransition(opacity: animation, child: child),
           );
         },
         transitionDuration: const Duration(milliseconds: 600),
@@ -125,9 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _togglePasswordVisibility() {
-    setState(() {
-      _obscurePassword = !_obscurePassword;
-    });
+    setState(() => _obscurePassword = !_obscurePassword);
   }
 
   @override
@@ -136,19 +134,17 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.white,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          // Adapter la disposition en fonction de la largeur de l'écran
           if (constraints.maxWidth < 800) {
-            // Disposition verticale pour les petits écrans
             return SingleChildScrollView(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 40,
+                ),
                 child: Column(
                   children: [
-                    // Partie formulaire
                     _buildLoginForm(),
                     const SizedBox(height: 40),
-                    
-                    // Partie image (plus petite sur mobile)
                     SizedBox(
                       height: 250,
                       child: Image.asset(
@@ -161,28 +157,25 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             );
           } else {
-            // Disposition horizontale pour les grands écrans
             return Row(
               children: [
-                // Partie gauche (formulaire)
                 Expanded(
                   flex: 1,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 60),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 40,
+                      vertical: 60,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildLoginForm(),
-                      ],
+                      children: [_buildLoginForm()],
                     ),
                   ),
                 ),
-
-                // Partie droite (image) - avec conteneur pour limiter l'expansion
                 Expanded(
                   flex: 1,
                   child: Container(
-                    constraints: const BoxConstraints(maxWidth: 500), // Limite la largeur max
+                    constraints: const BoxConstraints(maxWidth: 500),
                     child: Image.asset(
                       "assets/images/login.png",
                       fit: BoxFit.contain,
@@ -218,91 +211,95 @@ class _LoginScreenState extends State<LoginScreen> {
           style: TextStyle(fontSize: 14, color: Colors.grey),
         ),
         const SizedBox(height: 30),
-
-        // Champ Identifiant - TAILLE RÉDUITE
-        SizedBox(
-          height: 50,
-          child: TextField(
-            controller: _usernameController,
-            decoration: InputDecoration(
-              hintText: "Identifiant",
-              prefixIcon: const Icon(Icons.person_outline, size: 20),
-              filled: true,
-              fillColor: const Color(0xfff3f3f3),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-        ),
+        _buildUsernameField(),
         const SizedBox(height: 15),
-
-        // Champ Mot de passe - TAILLE RÉDUITE
-        SizedBox(
-          height: 50,
-          child: TextField(
-            controller: _passwordController,
-            obscureText: _obscurePassword,
-            decoration: InputDecoration(
-              hintText: "Mot de passe",
-              prefixIcon: const Icon(Icons.lock_outline, size: 20),
-              suffixIcon: Container(
-                width: 40,
-                alignment: Alignment.center,
-                child: IconButton(
-                  icon: Icon(
-                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                    color: Colors.black,
-                    size: 22,
-                  ),
-                  onPressed: _togglePasswordVisibility,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ),
-              filled: true,
-              fillColor: const Color(0xfff3f3f3),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-        ),
+        _buildPasswordField(),
         const SizedBox(height: 25),
-
-        // Bouton Se connecter
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: _isLoading ? null : _login,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
-              disabledBackgroundColor: Colors.grey,
-            ),
-            child: _isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : const Text(
-                    "Se connecter",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-          ),
-        ),
+        _buildSubmitButton(),
       ],
+    );
+  }
+
+  Widget _buildUsernameField() {
+    return SizedBox(
+      height: 50,
+      child: TextField(
+        controller: _usernameController,
+        decoration: InputDecoration(
+          hintText: "Identifiant",
+          prefixIcon: const Icon(Icons.person_outline, size: 20),
+          filled: true,
+          fillColor: const Color(0xfff3f3f3),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return SizedBox(
+      height: 50,
+      child: TextField(
+        controller: _passwordController,
+        obscureText: _obscurePassword,
+        decoration: InputDecoration(
+          hintText: "Mot de passe",
+          prefixIcon: const Icon(Icons.lock_outline, size: 20),
+          suffixIcon: Container(
+            width: 40,
+            alignment: Alignment.center,
+            child: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                color: Colors.black,
+                size: 22,
+              ),
+              onPressed: _togglePasswordVisibility,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ),
+          filled: true,
+          fillColor: const Color(0xfff3f3f3),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _login,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.black,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          disabledBackgroundColor: Colors.grey,
+        ),
+        child: _isLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : const Text(
+                "Se connecter",
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+      ),
     );
   }
 }

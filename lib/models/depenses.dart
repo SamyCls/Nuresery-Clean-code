@@ -8,7 +8,6 @@ class Depense {
   DateTime date;
   String attestation;
 
-  // Constructeur avec paramètres requis
   Depense({
     String? id,
     required this.categorie,
@@ -16,5 +15,24 @@ class Depense {
     required this.montant,
     required this.date,
     required this.attestation,
-  }) : id = id ?? const Uuid().v4(); // génère un id automatiquement si non fourni
+  }) : id = id ?? const Uuid().v4();
+
+  Depense copyWith({
+    String? id,
+    String? categorie,
+    String? description,
+    double? montant,
+    DateTime? date,
+    String? attestation,
+  }) {
+    final depense = Depense(
+      id: id ?? this.id,
+      categorie: categorie ?? this.categorie,
+      description: description ?? this.description,
+      montant: montant ?? this.montant,
+      date: date ?? this.date,
+      attestation: attestation ?? this.attestation,
+    );
+    return depense;
+  }
 }

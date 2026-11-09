@@ -6,11 +6,14 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import '/screens/employe_profile.dart';
 
 class ListeEmployesPage extends StatefulWidget {
+  const ListeEmployesPage({super.key});
+
   @override
-  _ListeEmployesPageState createState() => _ListeEmployesPageState();
+  State<ListeEmployesPage> createState() => _ListeEmployesPageState();
 }
 
-class _ListeEmployesPageState extends State<ListeEmployesPage> with WidgetsBindingObserver {
+class _ListeEmployesPageState extends State<ListeEmployesPage>
+    with WidgetsBindingObserver {
   final EmployeDao _employeDao = EmployeDao();
   List<Employe> _allEmployes = [];
   bool _isLoading = true;
@@ -64,13 +67,15 @@ class _ListeEmployesPageState extends State<ListeEmployesPage> with WidgetsBindi
         });
       }
     } catch (e) {
-      print('Erreur lors du chargement des employés: $e');
+      debugPrint('Erreur lors du chargement des employés: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors du chargement des employés')),
+          const SnackBar(
+            content: Text('Erreur lors du chargement des employés'),
+          ),
         );
       }
     }
@@ -81,7 +86,7 @@ class _ListeEmployesPageState extends State<ListeEmployesPage> with WidgetsBindi
       final matchSearch = selectedFilter == 'Poste'
           ? e.poste.toLowerCase().contains(searchQuery.toLowerCase())
           : e.nom.toLowerCase().contains(searchQuery.toLowerCase()) ||
-              e.prenom.toLowerCase().contains(searchQuery.toLowerCase());
+                e.prenom.toLowerCase().contains(searchQuery.toLowerCase());
 
       final matchStatus =
           selectedStatus == null ||
@@ -94,7 +99,9 @@ class _ListeEmployesPageState extends State<ListeEmployesPage> with WidgetsBindi
     if (selectedFilter == 'Nom') {
       list.sort((a, b) => a.nom.toLowerCase().compareTo(b.nom.toLowerCase()));
     } else if (selectedFilter == 'Poste') {
-      list.sort((a, b) => a.poste.toLowerCase().compareTo(b.poste.toLowerCase()));
+      list.sort(
+        (a, b) => a.poste.toLowerCase().compareTo(b.poste.toLowerCase()),
+      );
     }
 
     return list;
@@ -103,15 +110,14 @@ class _ListeEmployesPageState extends State<ListeEmployesPage> with WidgetsBindi
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return MainLayout(
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return MainLayout(child: Center(child: CircularProgressIndicator()));
     }
 
     final startIndex = currentPage * itemsPerPage;
-    final endIndex = (startIndex + itemsPerPage).clamp(0, filteredEmployes.length);
+    final endIndex = (startIndex + itemsPerPage).clamp(
+      0,
+      filteredEmployes.length,
+    );
     final paginatedEmployes = filteredEmployes.sublist(startIndex, endIndex);
 
     return MainLayout(
@@ -133,7 +139,7 @@ class _ListeEmployesPageState extends State<ListeEmployesPage> with WidgetsBindi
                 ),
               ),
             ),
-            
+
             Wrap(
               spacing: 8,
               runSpacing: 12,
@@ -287,7 +293,8 @@ class _ListeEmployesPageState extends State<ListeEmployesPage> with WidgetsBindi
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => EmployeeProfilePage(employeeId: null),
+                        builder: (context) =>
+                            EmployeeProfilePage(employeeId: null),
                       ),
                     );
                   },
@@ -314,12 +321,45 @@ class _ListeEmployesPageState extends State<ListeEmployesPage> with WidgetsBindi
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
               child: Row(
                 children: const [
-                  Expanded(child: Text('🆔 ID', style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(child: Text('👤 Employé', style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(child: Text('💼 Poste', style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(child: Text('📞 Téléphone', style: TextStyle(fontWeight: FontWeight.bold))),
-                  Expanded(child: Text('📌 Statut', style: TextStyle(fontWeight: FontWeight.bold))),
-                  SizedBox(width: 80, child: Center(child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold)))),
+                  Expanded(
+                    child: Text(
+                      '🆔 ID',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      '👤 Employé',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      '💼 Poste',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      '📞 Téléphone',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      '📌 Statut',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 80,
+                    child: Center(
+                      child: Text(
+                        'Actions',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -333,22 +373,34 @@ class _ListeEmployesPageState extends State<ListeEmployesPage> with WidgetsBindi
 
                   return Container(
                     color: isEven ? const Color(0xFFE2E7F3) : Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 12,
+                    ),
                     child: Row(
                       children: [
                         Expanded(child: Text(employe.id)),
-                        Expanded(child: Text("${employe.prenom} ${employe.nom}")),
+                        Expanded(
+                          child: Text("${employe.prenom} ${employe.nom}"),
+                        ),
                         Expanded(child: Text(employe.poste)),
                         Expanded(child: Text(employe.telephone)),
                         Expanded(
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
-                                color: employe.estActif ? Colors.green[100] : Colors.red[100],
+                                color: employe.estActif
+                                    ? Colors.green[100]
+                                    : Colors.red[100],
                                 border: Border.all(
-                                  color: employe.estActif ? Colors.green : Colors.red,
+                                  color: employe.estActif
+                                      ? Colors.green
+                                      : Colors.red,
                                   width: 1.5,
                                 ),
                                 borderRadius: BorderRadius.circular(6),
@@ -356,7 +408,9 @@ class _ListeEmployesPageState extends State<ListeEmployesPage> with WidgetsBindi
                               child: Text(
                                 employe.estActif ? 'Actif' : 'Inactif',
                                 style: TextStyle(
-                                  color: employe.estActif ? Colors.green[800] : Colors.red[800],
+                                  color: employe.estActif
+                                      ? Colors.green[800]
+                                      : Colors.red[800],
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -368,48 +422,82 @@ class _ListeEmployesPageState extends State<ListeEmployesPage> with WidgetsBindi
                           child: Row(
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.visibility, color: Color(0xFF0082EC)),
+                                icon: const Icon(
+                                  Icons.visibility,
+                                  color: Color(0xFF0082EC),
+                                ),
                                 onPressed: () {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => EmployeeProfilePage(employeeId: employe.id),
+                                      builder: (context) => EmployeeProfilePage(
+                                        employeeId: employe.id,
+                                      ),
                                     ),
                                   );
                                 },
                               ),
 
                               IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.red,
+                                ),
                                 onPressed: () {
                                   showDialog(
                                     context: context,
-                                    builder: (BuildContext context) {
+                                    builder: (BuildContext dialogContext) {
                                       return AlertDialog(
                                         title: const Text('Confirmation'),
-                                        content: const Text('Voulez-vous vraiment supprimer cet employé ?'),
+                                        content: const Text(
+                                          'Voulez-vous vraiment supprimer cet employé ?',
+                                        ),
                                         actions: [
                                           TextButton(
-                                            onPressed: () => Navigator.of(context).pop(),
+                                            onPressed: () =>
+                                                Navigator.of(dialogContext).pop(),
                                             child: const Text('Annuler'),
                                           ),
                                           TextButton(
                                             onPressed: () async {
-                                              Navigator.of(context).pop();
+                                              Navigator.of(dialogContext).pop();
                                               try {
-                                                await _employeDao.deleteEmploye(employe.id);
+                                                await _employeDao.deleteEmploye(
+                                                  employe.id,
+                                                );
                                                 await _loadEmployes();
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  SnackBar(content: Text('Employé supprimé avec succès')),
+                                                if (!context.mounted) return;
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text(
+                                                      'Employé supprimé avec succès',
+                                                    ),
+                                                  ),
                                                 );
                                               } catch (e) {
-                                                print('Erreur lors de la suppression: $e');
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  SnackBar(content: Text('Erreur lors de la suppression')),
+                                                debugPrint(
+                                                  'Erreur lors de la suppression: $e',
+                                                );
+                                                if (!context.mounted) return;
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text(
+                                                      'Erreur lors de la suppression',
+                                                    ),
+                                                  ),
                                                 );
                                               }
                                             },
-                                            child: const Text('Confirmer', style: TextStyle(color: Colors.red)),
+                                            child: const Text(
+                                              'Confirmer',
+                                              style: TextStyle(
+                                                color: Colors.red,
+                                              ),
+                                            ),
                                           ),
                                         ],
                                       );
@@ -434,12 +522,18 @@ class _ListeEmployesPageState extends State<ListeEmployesPage> with WidgetsBindi
                 children: [
                   IconButton(
                     icon: const Icon(Icons.chevron_left),
-                    onPressed: currentPage > 0 ? () => setState(() => currentPage--) : null,
+                    onPressed: currentPage > 0
+                        ? () => setState(() => currentPage--)
+                        : null,
                   ),
-                  Text('${currentPage + 1} / ${((filteredEmployes.length - 1) / itemsPerPage).floor() + 1}'),
+                  Text(
+                    '${currentPage + 1} / ${((filteredEmployes.length - 1) / itemsPerPage).floor() + 1}',
+                  ),
                   IconButton(
                     icon: const Icon(Icons.chevron_right),
-                    onPressed: (currentPage + 1) * itemsPerPage < filteredEmployes.length
+                    onPressed:
+                        (currentPage + 1) * itemsPerPage <
+                            filteredEmployes.length
                         ? () => setState(() => currentPage++)
                         : null,
                   ),

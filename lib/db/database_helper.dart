@@ -2,6 +2,9 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class DatabaseHelper {
+  static const String _databaseName = 'creche_manager.db';
+  static const int _databaseVersion = 1;
+
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
 
@@ -9,7 +12,7 @@ class DatabaseHelper {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('creche_manager.db');
+    _database = await _initDB(_databaseName);
     return _database!;
   }
 
@@ -17,11 +20,27 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(
+      path,
+      version: _databaseVersion,
+      onCreate: _createDB,
+    );
   }
 
-  Future _createDB(Database db, int version) async {
-    // ------------------ Enfants ------------------
+  Future<void> _createDB(Database db, int version) async {
+    await _createEnfantsTable(db);
+    await _createAccompagnateursTable(db);
+    await _createPresencesTable(db);
+    await _createEmployesTable(db);
+    await _createPaiementsEmployeTable(db);
+    await _createActivitiesTable(db);
+    await _createDepensesTable(db);
+    await _createPaiementsTable(db);
+    await _createUsersTable(db);
+    await _createEvaluationsTable(db);
+  }
+
+  Future<void> _createEnfantsTable(Database db) async {
     await db.execute('''
       CREATE TABLE enfants (
         id TEXT PRIMARY KEY,
@@ -48,7 +67,9 @@ class DatabaseHelper {
         dossierMedicalPath TEXT
       )
     ''');
+  }
 
+  Future<void> _createAccompagnateursTable(Database db) async {
     await db.execute('''
       CREATE TABLE accompagnateurs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -59,7 +80,9 @@ class DatabaseHelper {
         FOREIGN KEY (enfantId) REFERENCES enfants(id) ON DELETE CASCADE
       )
     ''');
+  }
 
+  Future<void> _createPresencesTable(Database db) async {
     await db.execute('''
       CREATE TABLE presences (
         enfantId TEXT NOT NULL,
@@ -68,8 +91,9 @@ class DatabaseHelper {
         PRIMARY KEY (enfantId, date)
       )
     ''');
+  }
 
-    // ------------------ Employes ------------------
+  Future<void> _createEmployesTable(Database db) async {
     await db.execute('''
       CREATE TABLE employes (
         id TEXT PRIMARY KEY,
@@ -85,8 +109,9 @@ class DatabaseHelper {
         photoUrl TEXT
       )
     ''');
+  }
 
-    // ------------------ Paiements des employes ------------------
+  Future<void> _createPaiementsEmployeTable(Database db) async {
     await db.execute('''
       CREATE TABLE paiements_employe (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -100,8 +125,9 @@ class DatabaseHelper {
         FOREIGN KEY (employeId) REFERENCES employes(id) ON DELETE CASCADE
       )
     ''');
+  }
 
-    // ------------------ Activities ------------------
+  Future<void> _createActivitiesTable(Database db) async {
     await db.execute('''
       CREATE TABLE activities (
         id TEXT PRIMARY KEY,
@@ -113,8 +139,9 @@ class DatabaseHelper {
         notes TEXT
       )
     ''');
+  }
 
-    // ------------------ Dépenses ------------------
+  Future<void> _createDepensesTable(Database db) async {
     await db.execute('''
       CREATE TABLE depenses (
         id TEXT PRIMARY KEY,
@@ -125,8 +152,9 @@ class DatabaseHelper {
         attestation TEXT
       )
     ''');
+  }
 
-    // ------------------ Paiements Enfant  ------------------
+  Future<void> _createPaiementsTable(Database db) async {
     await db.execute('''
       CREATE TABLE paiements (
         id TEXT PRIMARY KEY,
@@ -140,8 +168,9 @@ class DatabaseHelper {
         FOREIGN KEY (enfant_id) REFERENCES enfants (id) ON DELETE CASCADE
       )
     ''');
+  }
 
-    // ------------------ Users ------------------
+  Future<void> _createUsersTable(Database db) async {
     await db.execute('''
       CREATE TABLE users (
         id TEXT PRIMARY KEY,
@@ -150,24 +179,24 @@ class DatabaseHelper {
         role TEXT NOT NULL CHECK (role IN ('admin', 'standard'))
       )
     ''');
-
-    // ------------------ Evaluations ------------------ ✅
-    await db.execute('''
-  CREATE TABLE evaluations (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    enfantId TEXT NOT NULL,
-    date INTEGER NOT NULL, -- Store as timestamp (milliseconds since epoch)
-    competence TEXT NOT NULL,
-    valeur INTEGER NOT NULL, -- 1 = ✅, 0 = ❌
-    texte TEXT,
-    FOREIGN KEY (enfantId) REFERENCES enfants(id) ON DELETE CASCADE
-  )
-''');
   }
 
-  // Close DB
-  Future close() async {
+  Future<void> _createEvaluationsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE evaluations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        enfantId TEXT NOT NULL,
+        date INTEGER NOT NULL,
+        competence TEXT NOT NULL,
+        valeur INTEGER NOT NULL,
+        texte TEXT,
+        FOREIGN KEY (enfantId) REFERENCES enfants(id) ON DELETE CASCADE
+      )
+    ''');
+  }
+
+  Future<void> close() async {
     final db = await instance.database;
-    db.close();
+    await db.close();
   }
 }

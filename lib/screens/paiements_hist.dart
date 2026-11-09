@@ -26,13 +26,17 @@ class _PaiementScreenState extends State<PaiementScreen> {
 
   Future<void> _loadPaiements() async {
     try {
-      final loadedPaiements = await _enfantDao.getPaiementsByEnfantId(widget.enfant.id);
+      final loadedPaiements = await _enfantDao.getPaiementsByEnfantId(
+        widget.enfant.id,
+      );
+      if (!mounted) return;
       setState(() {
         paiements = loadedPaiements;
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading payments: $e');
+      debugPrint('Error loading payments: $e');
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -42,9 +46,10 @@ class _PaiementScreenState extends State<PaiementScreen> {
   Future<void> _savePaiement(Paiement paiement) async {
     try {
       await _enfantDao.insertPaiement(widget.enfant.id, paiement);
-      await _loadPaiements(); // Reload the payments
+      await _loadPaiements();
     } catch (e) {
-      print('Error saving payment: $e');
+      debugPrint('Error saving payment: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erreur lors de la sauvegarde: $e')),
       );
@@ -54,9 +59,10 @@ class _PaiementScreenState extends State<PaiementScreen> {
   Future<void> _updatePaiement(Paiement paiement) async {
     try {
       await _enfantDao.updatePaiement(widget.enfant.id, paiement);
-      await _loadPaiements(); // Reload the payments
+      await _loadPaiements();
     } catch (e) {
-      print('Error updating payment: $e');
+      debugPrint('Error updating payment: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erreur lors de la mise à jour: $e')),
       );
@@ -66,9 +72,10 @@ class _PaiementScreenState extends State<PaiementScreen> {
   Future<void> _deletePaiement(String paiementId) async {
     try {
       await _enfantDao.deletePaiement(paiementId, widget.enfant.id);
-      await _loadPaiements(); // Reload the payments
+      await _loadPaiements();
     } catch (e) {
-      print('Error deleting payment: $e');
+      debugPrint('Error deleting payment: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erreur lors de la suppression: $e')),
       );
@@ -109,7 +116,9 @@ class _PaiementScreenState extends State<PaiementScreen> {
           Navigator.pop(context);
         },
         onDelete: () {
-          _deletePaiement('${widget.enfant.id}_${paiement.mois}_${paiement.date.millisecondsSinceEpoch}');
+          _deletePaiement(
+            '${widget.enfant.id}_${paiement.mois}_${paiement.date.millisecondsSinceEpoch}',
+          );
           Navigator.pop(context);
         },
         isNew: false,
@@ -119,8 +128,18 @@ class _PaiementScreenState extends State<PaiementScreen> {
 
   String _getMonthName(int month) {
     final months = [
-      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+      'Janvier',
+      'Février',
+      'Mars',
+      'Avril',
+      'Mai',
+      'Juin',
+      'Juillet',
+      'Août',
+      'Septembre',
+      'Octobre',
+      'Novembre',
+      'Décembre',
     ];
     return months[month - 1];
   }
@@ -191,30 +210,32 @@ class _PaiementScreenState extends State<PaiementScreen> {
                         child: _isLoading
                             ? const Center(child: CircularProgressIndicator())
                             : paiements.isEmpty
-                                ? const Center(
-                                    child: Text(
-                                      'Aucun paiement enregistré',
-                                      style: TextStyle(fontSize: 18),
+                            ? const Center(
+                                child: Text(
+                                  'Aucun paiement enregistré',
+                                  style: TextStyle(fontSize: 18),
+                                ),
+                              )
+                            : ListView.builder(
+                                itemCount: paiements.length,
+                                itemBuilder: (context, index) {
+                                  return GestureDetector(
+                                    onTap: () => _showEditPaiementDialog(
+                                      paiements[index],
                                     ),
-                                  )
-                                : ListView.builder(
-                                    itemCount: paiements.length,
-                                    itemBuilder: (context, index) {
-                                      return GestureDetector(
-                                        onTap: () => _showEditPaiementDialog(paiements[index]),
-                                        child: Column(
-                                          children: [
-                                            _buildRow(paiements[index]),
-                                            Divider(
-                                              color: Colors.grey.shade300,
-                                              thickness: 1,
-                                            ),
-                                          ],
+                                    child: Column(
+                                      children: [
+                                        _buildRow(paiements[index]),
+                                        Divider(
+                                          color: Colors.grey.shade300,
+                                          thickness: 1,
                                         ),
-                                      );
-                                    },
-                                  ),
-                      )
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
                     ],
                   ),
                 ),
@@ -267,9 +288,12 @@ class _PaiementScreenState extends State<PaiementScreen> {
           Expanded(
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: getColor(paiement.statut).withOpacity(0.1),
+                  color: getColor(paiement.statut).withValues(alpha: 0.1),
                   border: Border.all(color: getColor(paiement.statut)),
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -316,8 +340,18 @@ class _PaiementDialogState extends State<PaiementDialog> {
   late StatutPaiements _statut;
 
   final List<String> _months = [
-    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+    'Janvier',
+    'Février',
+    'Mars',
+    'Avril',
+    'Mai',
+    'Juin',
+    'Juillet',
+    'Août',
+    'Septembre',
+    'Octobre',
+    'Novembre',
+    'Décembre',
   ];
 
   @override
@@ -357,8 +391,7 @@ class _PaiementDialogState extends State<PaiementDialog> {
 
   // Function for the print button (does nothing as requested)
   void _onPrintPressed() {
-    // This function does nothing as requested
-    print("Imprimer button pressed");
+    debugPrint("Imprimer button pressed");
   }
 
   @override
@@ -435,7 +468,7 @@ class _PaiementDialogState extends State<PaiementDialog> {
               foregroundColor: Colors.white,
             ),
           ),
-        
+
         if (!widget.isNew && widget.onDelete != null)
           TextButton(
             onPressed: () {

@@ -36,8 +36,7 @@ class _PresenceCalendarState extends State<PresenceCalendar> {
 
   /// Charge les présences depuis la DB pour l’enfant
   Future<void> _loadPresences() async {
-    final presences =
-        await _presenceDao.getPresencesByEnfant(widget.enfant.id);
+    final presences = await _presenceDao.getPresencesByEnfant(widget.enfant.id);
     setState(() {
       _presenceData = {
         for (var p in presences) DateUtils.dateOnly(p.date): p.statut,
@@ -62,10 +61,16 @@ class _PresenceCalendarState extends State<PresenceCalendar> {
     final header = DateFormat.yMMMM('fr_FR').format(_currentMonth);
 
     // ===== Calcul des jours à afficher =====
-    final firstDayOfMonth =
-        DateTime(_currentMonth.year, _currentMonth.month, 1);
-    final lastDayOfMonth =
-        DateTime(_currentMonth.year, _currentMonth.month + 1, 0);
+    final firstDayOfMonth = DateTime(
+      _currentMonth.year,
+      _currentMonth.month,
+      1,
+    );
+    final lastDayOfMonth = DateTime(
+      _currentMonth.year,
+      _currentMonth.month + 1,
+      0,
+    );
 
     final startWeekday = firstDayOfMonth.weekday % 7; // 0 = Dimanche
     final totalDays = lastDayOfMonth.day;
@@ -89,12 +94,20 @@ class _PresenceCalendarState extends State<PresenceCalendar> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
-                    icon: const Icon(Icons.chevron_left), onPressed: _prevMonth),
-                Text(header,
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold)),
+                  icon: const Icon(Icons.chevron_left),
+                  onPressed: _prevMonth,
+                ),
+                Text(
+                  header,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 IconButton(
-                    icon: const Icon(Icons.chevron_right), onPressed: _nextMonth),
+                  icon: const Icon(Icons.chevron_right),
+                  onPressed: _nextMonth,
+                ),
               ],
             ),
           ),
@@ -106,8 +119,10 @@ class _PresenceCalendarState extends State<PresenceCalendar> {
                 .map(
                   (day) => Expanded(
                     child: Center(
-                      child: Text(day,
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      child: Text(
+                        day,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 )
@@ -117,15 +132,17 @@ class _PresenceCalendarState extends State<PresenceCalendar> {
           // ===== Grille =====
           Expanded(
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 8.0,
+              ),
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
+                      color: Colors.grey.withValues(alpha: 0.3),
                       spreadRadius: 2,
                       blurRadius: 8,
                       offset: const Offset(0, 4),
@@ -150,18 +167,22 @@ class _PresenceCalendarState extends State<PresenceCalendar> {
                       return Container();
                     }
 
-                    final currentDay =
-                        DateTime(_currentMonth.year, _currentMonth.month, day);
+                    final currentDay = DateTime(
+                      _currentMonth.year,
+                      _currentMonth.month,
+                      day,
+                    );
 
-                    final status = _presenceData[DateUtils.dateOnly(currentDay)] ?? "";
+                    final status =
+                        _presenceData[DateUtils.dateOnly(currentDay)] ?? "";
 
                     return Container(
                       decoration: BoxDecoration(
                         color: status == "Présent"
                             ? Colors.green[100]
                             : status == "Absent"
-                                ? Colors.red[100]
-                                : Colors.grey[100],
+                            ? Colors.red[100]
+                            : Colors.grey[100],
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(color: Colors.grey.shade300),
                       ),

@@ -6,33 +6,30 @@ class AppUser {
   final String password;
   final UserRole role;
 
-  AppUser({
+  const AppUser({
     required this.id,
     required this.username,
     required this.password,
     required this.role,
   });
 
-  // 🔹 Getters pratiques
   bool get isAdmin => role == UserRole.admin;
   bool get isStandard => role == UserRole.standard;
 
-  // 🔹 Conversion vers Map pour la base de données
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'username': username,
       'password': password,
-      'role': role.name, // Convertir l'enum en String
+      'role': role.name,
     };
   }
 
-  // 🔹 Création depuis Map (depuis la base de données)
   factory AppUser.fromMap(Map<String, dynamic> map) {
     return AppUser(
-      id: map['id'],
-      username: map['username'],
-      password: map['password'],
+      id: map['id'] as String? ?? '',
+      username: map['username'] as String? ?? '',
+      password: map['password'] as String? ?? '',
       role: UserRole.values.firstWhere(
         (e) => e.name == map['role'],
         orElse: () => UserRole.standard,
@@ -40,12 +37,25 @@ class AppUser {
     );
   }
 
-  // 🔹 Méthode pour créer un utilisateur admin par défaut
-  static AppUser createDefaultAdmin() {
+  AppUser copyWith({
+    String? id,
+    String? username,
+    String? password,
+    UserRole? role,
+  }) {
     return AppUser(
+      id: id ?? this.id,
+      username: username ?? this.username,
+      password: password ?? this.password,
+      role: role ?? this.role,
+    );
+  }
+
+  static AppUser createDefaultAdmin() {
+    return const AppUser(
       id: 'admin-001',
       username: 'admin',
-      password: 'admin123', // À changer après la première connexion
+      password: 'admin123',
       role: UserRole.admin,
     );
   }

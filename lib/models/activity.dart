@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 class Activity {
-  final String id; // Unique ID for DB storage
-  String className; // Class concerned
-   String title; // Activity title
-   DateTime date; // Full date (YYYY-MM-DD)
-   TimeOfDay start; // Start time
-   TimeOfDay end; // End time
-   String notes; // Optional notes
+  final String id;
+  String className;
+  String title;
+  DateTime date;
+  TimeOfDay start;
+  TimeOfDay end;
+  String notes;
 
   Activity({
     required this.id,
@@ -18,4 +18,24 @@ class Activity {
     required this.end,
     this.notes = '',
   });
+
+  Activity copyWith({
+    String? id,
+    String? className,
+    String? title,
+    DateTime? date,
+    TimeOfDay? start,
+    TimeOfDay? end,
+    String? notes,
+  }) {
+    return Activity(
+      id: id ?? this.id,
+      className: className ?? this.className,
+      title: title ?? this.title,
+      date: date ?? this.date,
+      start: start ?? this.start,
+      end: end ?? this.end,
+      notes: notes ?? this.notes,
+    );
+  }
 }

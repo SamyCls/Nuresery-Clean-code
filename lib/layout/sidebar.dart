@@ -2,16 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import '/screens/dashboard.dart';
 import '/screens/enfant_screen.dart';
-import '/screens/présence.dart';
+import '/screens/presence_screen.dart';
 import '/screens/employe_page.dart';
 import '/screens/planing_act.dart';
 import '/screens/depenses.dart';
 import '/screens/stats.dart';
 import '/screens/suivipaie.dart';
 import '/screens/settings.dart';
-import '/app_state.dart'; // Importez le fichier app_state
+import '/app_state.dart';
 
-/// 🔹 Fonction utilitaire : retourne le bon widget en fonction de la route
+class SidebarNavigationItem {
+  final String label;
+  final IconData icon;
+  final String route;
+  final bool isPaiement;
+
+  const SidebarNavigationItem({
+    required this.label,
+    required this.icon,
+    required this.route,
+    this.isPaiement = false,
+  });
+}
+
 Widget _getPageFromRoute(String route) {
   switch (route) {
     case '/':
@@ -25,11 +38,11 @@ Widget _getPageFromRoute(String route) {
     case '/activites':
       return WeeklyPlannerPage();
     case '/depenses':
-      return DepensesScreen();
+      return const DepensesScreen();
     case '/paiements-enfant':
-      return SuiviPaiementsScreen();
+      return const SuiviPaiementsScreen();
     case '/statistiques':
-      return StatisticsScreen();
+      return const StatisticsScreen();
     case '/parametres':
       return ParametersScreen();
     default:
@@ -37,7 +50,6 @@ Widget _getPageFromRoute(String route) {
   }
 }
 
-/// 🔹 Composant Sidebar (menu latéral)
 class Sidebar extends StatefulWidget {
   final String activeRoute;
   const Sidebar({super.key, this.activeRoute = '/'});
@@ -46,45 +58,116 @@ class Sidebar extends StatefulWidget {
   State<Sidebar> createState() => _SidebarState();
 }
 
-class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
+class _SidebarState extends State<Sidebar> {
   bool _showPaiementSubmenu = false;
 
-  @override
-  void initState() {
-    super.initState();
-    print('Sidebar initialisé avec utilisateur: ${currentUser?.username}, Role: ${currentUser?.role}'); // Debug
-  }
-
-  // Définissez les menus pour chaque type d'utilisateur
-  List<Map<String, dynamic>> get menuItems {
+  List<SidebarNavigationItem> get _menuItems {
     if (currentUser == null) {
-      print('Aucun utilisateur connecté'); // Debug
-      return [];
+      return const [];
     }
-    
-    print('Chargement du menu pour: ${currentUser!.username}, Admin: ${currentUser!.isAdmin}'); // Debug
-    
+
     if (currentUser!.isAdmin) {
-      // Menu complet pour les administrateurs
-      return [
-        {'label': 'Dashboard', 'icon': CupertinoIcons.home, 'route': '/'},
-        {'label': 'Enfants', 'icon': CupertinoIcons.person_2, 'route': '/enfants'},
-        {'label': 'Présence', 'icon': CupertinoIcons.checkmark_seal, 'route': '/presence'},
-        {'label': 'Employés', 'icon': CupertinoIcons.person_crop_rectangle, 'route': '/employes'},
-        {'label': 'Activités', 'icon': CupertinoIcons.calendar_today, 'route': '/activites'},
-        {'label': 'Paiements', 'icon': CupertinoIcons.money_dollar, 'route': '/paiements', 'isPaiement': true},
-        {'label': 'Statistiques', 'icon': CupertinoIcons.chart_bar, 'route': '/statistiques'},
-        {'label': 'Paramètres', 'icon': CupertinoIcons.settings, 'route': '/parametres'},
+      return const [
+        SidebarNavigationItem(
+          label: 'Dashboard',
+          icon: CupertinoIcons.home,
+          route: '/',
+        ),
+        SidebarNavigationItem(
+          label: 'Enfants',
+          icon: CupertinoIcons.person_2,
+          route: '/enfants',
+        ),
+        SidebarNavigationItem(
+          label: 'Présence',
+          icon: CupertinoIcons.checkmark_seal,
+          route: '/presence',
+        ),
+        SidebarNavigationItem(
+          label: 'Employés',
+          icon: CupertinoIcons.person_crop_rectangle,
+          route: '/employes',
+        ),
+        SidebarNavigationItem(
+          label: 'Activités',
+          icon: CupertinoIcons.calendar_today,
+          route: '/activites',
+        ),
+        SidebarNavigationItem(
+          label: 'Paiements',
+          icon: CupertinoIcons.money_dollar,
+          route: '/paiements',
+          isPaiement: true,
+        ),
+        SidebarNavigationItem(
+          label: 'Statistiques',
+          icon: CupertinoIcons.chart_bar,
+          route: '/statistiques',
+        ),
+        SidebarNavigationItem(
+          label: 'Paramètres',
+          icon: CupertinoIcons.settings,
+          route: '/parametres',
+        ),
       ];
     } else {
-      // Menu restreint pour les utilisateurs standard
-      return [
-        {'label': 'Dashboard', 'icon': CupertinoIcons.home, 'route': '/'},
-        {'label': 'Enfants', 'icon': CupertinoIcons.person_2, 'route': '/enfants'},
-        {'label': 'Présence', 'icon': CupertinoIcons.checkmark_seal, 'route': '/presence'},
-        {'label': 'Activités', 'icon': CupertinoIcons.calendar_today, 'route': '/activites'},
+      return const [
+        SidebarNavigationItem(
+          label: 'Dashboard',
+          icon: CupertinoIcons.home,
+          route: '/',
+        ),
+        SidebarNavigationItem(
+          label: 'Enfants',
+          icon: CupertinoIcons.person_2,
+          route: '/enfants',
+        ),
+        SidebarNavigationItem(
+          label: 'Présence',
+          icon: CupertinoIcons.checkmark_seal,
+          route: '/presence',
+        ),
+        SidebarNavigationItem(
+          label: 'Activités',
+          icon: CupertinoIcons.calendar_today,
+          route: '/activites',
+        ),
       ];
     }
+  }
+
+  void _navigateToRoute(String route) {
+    setState(() => currentSidebarRoute = route);
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            _getPageFromRoute(route),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final curvedAnimation = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeInOut,
+          );
+          return FadeTransition(
+            opacity: curvedAnimation,
+            child: ScaleTransition(
+              scale: Tween<double>(
+                begin: 0.95,
+                end: 1.0,
+              ).animate(curvedAnimation),
+              child: child,
+            ),
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 500),
+      ),
+    );
+  }
+
+  void _navigateToSubmenu(String route) {
+    setState(() => currentSidebarRoute = route);
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => _getPageFromRoute(route)));
   }
 
   @override
@@ -96,57 +179,7 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
-
-          // ── Profil utilisateur ─────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: const Color(0xFF3B82F6),
-                  child: Text(
-                    currentUser != null && currentUser!.username.isNotEmpty
-                        ? currentUser!.username[0].toUpperCase()
-                        : '?',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        currentUser != null ? currentUser!.username : 'Inconnu',
-                        style: const TextStyle(
-                          color: Colors.black87,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        currentUser != null && currentUser!.isAdmin
-                            ? 'Admin Panel'
-                            : 'Utilisateur',
-                        style: const TextStyle(
-                          color: Color(0xFF3B82F6),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
+          _buildUserProfileHeader(),
           const SizedBox(height: 16),
           const Divider(
             color: Colors.black12,
@@ -155,128 +188,174 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
             endIndent: 16,
           ),
           const SizedBox(height: 4),
-          /// 🔹 Menu principal
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: menuItems.map((item) {
-                  return Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4),
-                        child: _SidebarItem(
-                          icon: item['icon'],
-                          label: item['label'],
-                          isActive: currentSidebarRoute == item['route'],
-                          onTap: () {
-                            if (item['isPaiement'] == true && currentUser!.isAdmin) {
-                              setState(() {
-                                _showPaiementSubmenu = !_showPaiementSubmenu;
-                              });
-                            } else {
-                              setState(() => currentSidebarRoute = item['route']);
-                              Navigator.of(context).push(
-                                PageRouteBuilder(
-                                  pageBuilder: (context, animation, secondaryAnimation) =>
-                                      _getPageFromRoute(item['route']),
-                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                    final curvedAnimation = CurvedAnimation(
-                                        parent: animation, curve: Curves.easeInOut);
-                                    return FadeTransition(
-                                      opacity: curvedAnimation,
-                                      child: ScaleTransition(
-                                        scale: Tween<double>(begin: 0.95, end: 1.0)
-                                            .animate(curvedAnimation),
-                                        child: child,
-                                      ),
-                                    );
-                                  },
-                                  transitionDuration: const Duration(milliseconds: 500),
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                      ),
+          Expanded(child: _buildMenuItemsList()),
+          const Divider(
+            color: Colors.black26,
+            thickness: 1,
+            indent: 16,
+            endIndent: 16,
+          ),
+          _buildLogoutButton(),
+        ],
+      ),
+    );
+  }
 
-                      // 🔹 Sous-menu Paiements (uniquement pour les admins)
-                      if (item['isPaiement'] == true && currentUser!.isAdmin)
-                        AnimatedSize(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                          child: _showPaiementSubmenu
-                              ? Column(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 32.0, right: 8, top: 2, bottom: 2),
-                                      child: _SidebarItem(
-                                        icon: CupertinoIcons.arrow_right,
-                                        label: "Dépenses",
-                                        isActive: currentSidebarRoute == '/depenses',
-                                        onTap: () {
-                                          setState(() => currentSidebarRoute = '/depenses');
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (_) => _getPageFromRoute('/depenses'),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 32.0, right: 8, top: 2, bottom: 2),
-                                      child: _SidebarItem(
-                                        icon: CupertinoIcons.arrow_right,
-                                        label: "Paiements Enfant",
-                                        isActive: currentSidebarRoute == '/paiements-enfant',
-                                        onTap: () {
-                                          setState(() => currentSidebarRoute = '/paiements-enfant');
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (_) => _getPageFromRoute('/paiements-enfant'),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : const SizedBox.shrink(),
-                        ),
-                    ],
-                  );
-                }).toList(),
+  Widget _buildUserProfileHeader() {
+    final username = currentUser?.username ?? 'Inconnu';
+    final avatarLetter = username.isNotEmpty ? username[0].toUpperCase() : '?';
+    final roleText = (currentUser?.isAdmin ?? false)
+        ? 'Admin Panel'
+        : 'Utilisateur';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: const Color(0xFF3B82F6),
+            child: Text(
+              avatarLetter,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
-
-          const Divider(color: Colors.black26, thickness: 1, indent: 16, endIndent: 16),
-
-          // 🔹 Bouton Se déconnecter en bas
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                // Réinitialiser l'utilisateur courant
-                currentUser = null;
-                Navigator.of(context).pushReplacementNamed('/login');
-              },
-              icon: const Icon(CupertinoIcons.power),
-              label: const Text("Se déconnecter",style: TextStyle(color: Colors.black),),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 255, 232, 232),
-                foregroundColor: const Color.fromARGB(255, 231, 7, 7),
-                minimumSize: const Size(double.infinity, 48),
-              ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  username,
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  roleText,
+                  style: const TextStyle(
+                    color: Color(0xFF3B82F6),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildMenuItemsList() {
+    return SingleChildScrollView(
+      child: Column(
+        children: _menuItems.map((item) {
+          final isPaiementItem =
+              item.isPaiement && (currentUser?.isAdmin ?? false);
+
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8.0,
+                  vertical: 4,
+                ),
+                child: _SidebarItem(
+                  icon: item.icon,
+                  label: item.label,
+                  isActive: currentSidebarRoute == item.route,
+                  onTap: () {
+                    if (isPaiementItem) {
+                      setState(() {
+                        _showPaiementSubmenu = !_showPaiementSubmenu;
+                      });
+                    } else {
+                      _navigateToRoute(item.route);
+                    }
+                  },
+                ),
+              ),
+              if (isPaiementItem)
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  child: _showPaiementSubmenu
+                      ? _buildPaiementSubmenu()
+                      : const SizedBox.shrink(),
+                ),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildPaiementSubmenu() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(
+            left: 32.0,
+            right: 8,
+            top: 2,
+            bottom: 2,
+          ),
+          child: _SidebarItem(
+            icon: CupertinoIcons.arrow_right,
+            label: "Dépenses",
+            isActive: currentSidebarRoute == '/depenses',
+            onTap: () => _navigateToSubmenu('/depenses'),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(
+            left: 32.0,
+            right: 8,
+            top: 2,
+            bottom: 2,
+          ),
+          child: _SidebarItem(
+            icon: CupertinoIcons.arrow_right,
+            label: "Paiements Enfant",
+            isActive: currentSidebarRoute == '/paiements-enfant',
+            onTap: () => _navigateToSubmenu('/paiements-enfant'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLogoutButton() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: ElevatedButton.icon(
+        onPressed: () {
+          currentUser = null;
+          Navigator.of(context).pushReplacementNamed('/login');
+        },
+        icon: const Icon(CupertinoIcons.power),
+        label: const Text(
+          "Se déconnecter",
+          style: TextStyle(color: Colors.black),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color.fromARGB(255, 255, 232, 232),
+          foregroundColor: const Color.fromARGB(255, 231, 7, 7),
+          minimumSize: const Size(double.infinity, 48),
+        ),
+      ),
+    );
+  }
 }
 
-/// 🔹 Composant individuel pour chaque élément du menu
 class _SidebarItem extends StatefulWidget {
   final IconData icon;
   final String label;
@@ -312,21 +391,25 @@ class _SidebarItemState extends State<_SidebarItem> {
             color: widget.isActive
                 ? const Color(0xFF3B82F6)
                 : _isHovering
-                    ? Colors.blue[100]
-                    : Colors.transparent,
+                ? Colors.blue[100]
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             children: [
-              Icon(widget.icon,
-                  color: widget.isActive ? Colors.white : Colors.black54),
+              Icon(
+                widget.icon,
+                color: widget.isActive ? Colors.white : Colors.black54,
+              ),
               const SizedBox(width: 10),
               Text(
                 widget.label,
                 style: TextStyle(
                   color: widget.isActive ? Colors.white : Colors.black87,
                   fontSize: 14,
-                  fontWeight: widget.isActive ? FontWeight.w600 : FontWeight.normal,
+                  fontWeight: widget.isActive
+                      ? FontWeight.w600
+                      : FontWeight.normal,
                 ),
               ),
             ],

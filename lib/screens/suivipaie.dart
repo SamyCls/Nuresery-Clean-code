@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '/models/enfant.dart';
 import '/db/enfant_dao.dart';
-import 'dart:ui';
 import '/layout/main_layout.dart';
-import 'package:flutter/services.dart'; // Add this import
 
 class SuiviPaiementsScreen extends StatefulWidget {
   const SuiviPaiementsScreen({super.key});
@@ -31,44 +30,21 @@ class _SuiviPaiementsScreenState extends State<SuiviPaiementsScreen> {
   Future<void> _loadEnfants() async {
     try {
       final enfants = await _enfantDao.getAllEnfants();
-      // Load payments for each child
       final enfantsWithPayments = await Future.wait(
         enfants.map((enfant) async {
           final paiements = await _enfantDao.getPaiementsByEnfantId(enfant.id);
-          return Enfant(
-            id: enfant.id,
-            nom: enfant.nom,
-            prenom: enfant.prenom,
-            classe: enfant.classe,
-            telephone: enfant.telephone,
-            estActif: enfant.estActif,
-            dateNaissance: enfant.dateNaissance,
-            sexe: enfant.sexe,
-            adresse: enfant.adresse,
-            photoPath: enfant.photoPath,
-            nomPrenomPere: enfant.nomPrenomPere,
-            telPere: enfant.telPere,
-            professionPere: enfant.professionPere,
-            adressePere: enfant.adressePere,
-            nomPrenomMere: enfant.nomPrenomMere,
-            telMere: enfant.telMere,
-            professionMere: enfant.professionMere,
-            statutFamilial: enfant.statutFamilial,
-            allergies: enfant.allergies,
-            commentairesMedicaux: enfant.commentairesMedicaux,
-            dossierMedicalPath: enfant.dossierMedicalPath,
-            paiements: paiements,
-            historiquePresence: enfant.historiquePresence,
-          );
+          return enfant.copyWith(paiements: paiements);
         }),
       );
 
+      if (!mounted) return;
       setState(() {
         _enfants = enfantsWithPayments;
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading enfants: $e');
+      debugPrint('Error loading enfants: $e');
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -130,12 +106,14 @@ class _SuiviPaiementsScreenState extends State<SuiviPaiementsScreen> {
   Future<void> _addPaiement(Enfant enfant, Paiement paiement) async {
     try {
       await _enfantDao.insertPaiement(enfant.id, paiement);
-      await _loadEnfants(); // Reload data
+      await _loadEnfants();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Paiement ajouté pour ${enfant.nomComplet}')),
       );
     } catch (e) {
-      print('Error adding payment: $e');
+      debugPrint('Error adding payment: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Erreur lors de l\'ajout: $e')));
@@ -145,12 +123,14 @@ class _SuiviPaiementsScreenState extends State<SuiviPaiementsScreen> {
   Future<void> _updatePaiement(String enfantId, Paiement paiement) async {
     try {
       await _enfantDao.updatePaiement(enfantId, paiement);
-      await _loadEnfants(); // Reload data
+      await _loadEnfants();
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Paiement mis à jour')));
+      ).showSnackBar(const SnackBar(content: Text('Paiement mis à jour')));
     } catch (e) {
-      print('Error updating payment: $e');
+      debugPrint('Error updating payment: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erreur lors de la mise à jour: $e')),
       );
@@ -459,347 +439,383 @@ class _SuiviPaiementsScreenState extends State<SuiviPaiementsScreen> {
     );
   }
 
- void _showAddPaiementDialog() {
-  final _formKey = GlobalKey<FormState>();
-  Enfant? selectedEnfant;
-  String? selectedMonth;
-  String? selectedYear;
-  final montantDuController = TextEditingController();
-  final montantPayeController = TextEditingController();
-  DateTime selectedDate = DateTime.now();
+  void _showAddPaiementDialog() {
+    final formKey = GlobalKey<FormState>();
+    Enfant? selectedEnfant;
+    String? selectedMonth;
+    String? selectedYear;
+    final montantDuController = TextEditingController();
+    final montantPayeController = TextEditingController();
+    DateTime selectedDate = DateTime.now();
 
+    // Liste des mois
+    final List<String> months = [
+      "Janvier",
+      "Février",
+      "Mars",
+      "Avril",
+      "Mai",
+      "Juin",
+      "Juillet",
+      "Août",
+      "Septembre",
+      "Octobre",
+      "Novembre",
+      "Décembre",
+    ];
 
-  // Liste des mois
-  final List<String> months = [
-    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
-  ];
+    // Liste des années
+    final List<String> years = [];
+    final currentYear = DateTime.now().year;
+    for (int y = currentYear - 1; y <= currentYear + 1; y++) {
+      years.add(y.toString());
+    }
 
-  // Liste des années
-  final List<String> years = [];
-  final currentYear = DateTime.now().year;
-  for (int y = currentYear - 1; y <= currentYear + 1; y++) {
-    years.add(y.toString());
-  }
-
-  showDialog(
-    context: context,
-    builder: (context) {
-      return StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            title: const Text("Ajouter un paiement"),
-            content: SizedBox(
-              width: 500,
-              child: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Sélection de l'enfant avec Autocomplete - CORRIGÉ
-                      Autocomplete<Enfant>(
-                        optionsBuilder: (TextEditingValue textEditingValue) {
-                          if (textEditingValue.text.isEmpty) {
-                            return const Iterable<Enfant>.empty();
-                          }
-                          return _enfants.where((Enfant enfant) {
-                            return enfant.nomComplet.toLowerCase().contains(
-                              textEditingValue.text.toLowerCase(),
-                            );
-                          });
-                        },
-                        displayStringForOption: (Enfant enfant) => enfant.nomComplet,
-                        fieldViewBuilder: (
-                          BuildContext context,
-                          TextEditingController textEditingController,
-                          FocusNode focusNode,
-                          VoidCallback onFieldSubmitted,
-                        ) {
-                          // Utiliser le contrôleur fourni par Autocomplete
-                          return TextFormField(
-                            controller: textEditingController,
-                            focusNode: focusNode,
-                            decoration: const InputDecoration(
-                              labelText: "Enfant *",
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              // Réinitialiser la sélection si l'utilisateur modifie le texte
-                              setDialogState(() {
-                                selectedEnfant = null;
-                              });
-                            },
-                          );
-                        },
-                        onSelected: (Enfant selection) {
-                          setDialogState(() {
-                            selectedEnfant = selection;
-                          });
-                        },
-                        optionsViewBuilder: (
-                          BuildContext context,
-                          AutocompleteOnSelected<Enfant> onSelected,
-                          Iterable<Enfant> options,
-                        ) {
-                          return Align(
-                            alignment: Alignment.topLeft,
-                            child: Material(
-                              elevation: 4.0,
-                              child: SizedBox(
-                                height: 200,
-                                child: ListView.builder(
-                                  padding: EdgeInsets.zero,
-                                  itemCount: options.length,
-                                  itemBuilder: (BuildContext context, int index) {
-                                    final Enfant option = options.elementAt(index);
-                                    return InkWell(
-                                      onTap: () => onSelected(option),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: Text(option.nomComplet),
-                                      ),
-                                    );
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return StatefulBuilder(
+          builder: (contentCtx, setDialogState) {
+            return AlertDialog(
+              title: const Text("Ajouter un paiement"),
+              content: SizedBox(
+                width: 500,
+                child: Form(
+                  key: formKey,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Sélection de l'enfant avec Autocomplete - CORRIGÉ
+                        Autocomplete<Enfant>(
+                          optionsBuilder: (TextEditingValue textEditingValue) {
+                            if (textEditingValue.text.isEmpty) {
+                              return const Iterable<Enfant>.empty();
+                            }
+                            return _enfants.where((Enfant enfant) {
+                              return enfant.nomComplet.toLowerCase().contains(
+                                textEditingValue.text.toLowerCase(),
+                              );
+                            });
+                          },
+                          displayStringForOption: (Enfant enfant) =>
+                              enfant.nomComplet,
+                          fieldViewBuilder:
+                              (
+                                BuildContext context,
+                                TextEditingController textEditingController,
+                                FocusNode focusNode,
+                                VoidCallback onFieldSubmitted,
+                              ) {
+                                // Utiliser le contrôleur fourni par Autocomplete
+                                return TextFormField(
+                                  controller: textEditingController,
+                                  focusNode: focusNode,
+                                  decoration: const InputDecoration(
+                                    labelText: "Enfant *",
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  onChanged: (value) {
+                                    // Réinitialiser la sélection si l'utilisateur modifie le texte
+                                    setDialogState(() {
+                                      selectedEnfant = null;
+                                    });
                                   },
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 12),
+                                );
+                              },
+                          onSelected: (Enfant selection) {
+                            setDialogState(() {
+                              selectedEnfant = selection;
+                            });
+                          },
+                          optionsViewBuilder:
+                              (
+                                BuildContext context,
+                                AutocompleteOnSelected<Enfant> onSelected,
+                                Iterable<Enfant> options,
+                              ) {
+                                return Align(
+                                  alignment: Alignment.topLeft,
+                                  child: Material(
+                                    elevation: 4.0,
+                                    child: SizedBox(
+                                      height: 200,
+                                      child: ListView.builder(
+                                        padding: EdgeInsets.zero,
+                                        itemCount: options.length,
+                                        itemBuilder:
+                                            (BuildContext context, int index) {
+                                              final Enfant option = options
+                                                  .elementAt(index);
+                                              return InkWell(
+                                                onTap: () => onSelected(option),
+                                                child: Padding(
+                                                  padding: const EdgeInsets.all(
+                                                    16.0,
+                                                  ),
+                                                  child: Text(
+                                                    option.nomComplet,
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                        ),
+                        const SizedBox(height: 12),
 
-                      // Mois et Année séparés
-                      Row(
-                        children: [
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              decoration: const InputDecoration(
-                                labelText: "Mois *",
-                                border: OutlineInputBorder(),
-                              ),
-                              value: selectedMonth,
-                              items: months
-                                  .map((m) => DropdownMenuItem(
+                        // Mois et Année séparés
+                        Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButtonFormField<String>(
+                                decoration: const InputDecoration(
+                                  labelText: "Mois *",
+                                  border: OutlineInputBorder(),
+                                ),
+                                initialValue: selectedMonth,
+                                items: months
+                                    .map(
+                                      (m) => DropdownMenuItem(
                                         value: m,
                                         child: Text(m),
-                                      ))
-                                  .toList(),
-                              onChanged: (val) => setDialogState(() => selectedMonth = val),
-                              validator: (val) => val == null ? "Choisissez un mois" : null,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              decoration: const InputDecoration(
-                                labelText: "Année *",
-                                border: OutlineInputBorder(),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (val) =>
+                                    setDialogState(() => selectedMonth = val),
+                                validator: (val) =>
+                                    val == null ? "Choisissez un mois" : null,
                               ),
-                              value: selectedYear,
-                              items: years
-                                  .map((y) => DropdownMenuItem(
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: DropdownButtonFormField<String>(
+                                decoration: const InputDecoration(
+                                  labelText: "Année *",
+                                  border: OutlineInputBorder(),
+                                ),
+                                initialValue: selectedYear,
+                                items: years
+                                    .map(
+                                      (y) => DropdownMenuItem(
                                         value: y,
                                         child: Text(y),
-                                      ))
-                                  .toList(),
-                              onChanged: (val) => setDialogState(() => selectedYear = val),
-                              validator: (val) => val == null ? "Choisissez une année" : null,
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (val) =>
+                                    setDialogState(() => selectedYear = val),
+                                validator: (val) =>
+                                    val == null ? "Choisissez une année" : null,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Montant dû
-                      TextFormField(
-                        controller: montantDuController,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: <TextInputFormatter>[
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        decoration: const InputDecoration(
-                          labelText: "Montant dû *",
-                          border: OutlineInputBorder(),
+                          ],
                         ),
-                        validator: (val) {
-                          if (val == null || val.isEmpty) {
-                            return "Entrez le montant dû";
-                          }
-                          final amount = int.tryParse(val);
-                          if (amount == null || amount <= 0) {
-                            return "Montant invalide";
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 12),
+                        const SizedBox(height: 12),
 
-                      // Montant payé
-                      TextFormField(
-                        controller: montantPayeController,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: <TextInputFormatter>[
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        decoration: const InputDecoration(
-                          labelText: "Montant payé *",
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (val) {
-                          if (val == null || val.isEmpty) {
-                            return "Entrez le montant payé";
-                          }
-                          final amount = int.tryParse(val);
-                          if (amount == null || amount < 0) {
-                            return "Montant invalide";
-                          }
-                          
-                          // Validation supplémentaire : montant payé ne peut pas dépasser montant dû
-                          final montantDu = int.tryParse(montantDuController.text) ?? 0;
-                          if (amount > montantDu) {
-                            return "Le montant payé ne peut pas dépasser le montant dû";
-                          }
-                          
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Date de paiement
-                      InkWell(
-                        onTap: () async {
-                          final DateTime? picked = await showDatePicker(
-                            context: context,
-                            initialDate: DateTime.now(),
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime(2100),
-                          );
-                          if (picked != null) {
-                            setDialogState(() {
-                              selectedDate = picked;
-                            });
-                          }
-                        },
-                        child: InputDecorator(
+                        // Montant dû
+                        TextFormField(
+                          controller: montantDuController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: <TextInputFormatter>[
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
                           decoration: const InputDecoration(
-                            labelText: "Date de paiement *",
+                            labelText: "Montant dû *",
                             border: OutlineInputBorder(),
                           ),
-                          child: Text(
-                            DateFormat("dd/MM/yyyy").format(selectedDate),
+                          validator: (val) {
+                            if (val == null || val.isEmpty) {
+                              return "Entrez le montant dû";
+                            }
+                            final amount = int.tryParse(val);
+                            if (amount == null || amount <= 0) {
+                              return "Montant invalide";
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Montant payé
+                        TextFormField(
+                          controller: montantPayeController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: <TextInputFormatter>[
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          decoration: const InputDecoration(
+                            labelText: "Montant payé *",
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (val) {
+                            if (val == null || val.isEmpty) {
+                              return "Entrez le montant payé";
+                            }
+                            final amount = int.tryParse(val);
+                            if (amount == null || amount < 0) {
+                              return "Montant invalide";
+                            }
+
+                            // Validation supplémentaire : montant payé ne peut pas dépasser montant dû
+                            final montantDu =
+                                int.tryParse(montantDuController.text) ?? 0;
+                            if (amount > montantDu) {
+                              return "Le montant payé ne peut pas dépasser le montant dû";
+                            }
+
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Date de paiement
+                        InkWell(
+                          onTap: () async {
+                            final DateTime? picked = await showDatePicker(
+                              context: context,
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(2100),
+                            );
+                            if (picked != null) {
+                              setDialogState(() {
+                                selectedDate = picked;
+                              });
+                            }
+                          },
+                          child: InputDecorator(
+                            decoration: const InputDecoration(
+                              labelText: "Date de paiement *",
+                              border: OutlineInputBorder(),
+                            ),
+                            child: Text(
+                              DateFormat("dd/MM/yyyy").format(selectedDate),
+                            ),
                           ),
                         ),
-                      ),
-                      
-                      // Message d'information
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(8),
+
+                        // Message d'information
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            "* Champs obligatoires\nDouble-cliquez sur un paiement existant pour le modifier",
+                            style: TextStyle(fontSize: 12, color: Colors.blue),
+                          ),
                         ),
-                        child: const Text(
-                          "* Champs obligatoires\nDouble-cliquez sur un paiement existant pour le modifier",
-                          style: TextStyle(fontSize: 12, color: Colors.blue),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text("Annuler"),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  // Valider le formulaire
-                  if (!_formKey.currentState!.validate()) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Veuillez corriger les erreurs'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                    return;
-                  }
-
-                  // Validation manuelle supplémentaire
-                  if (selectedEnfant == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Veuillez sélectionner un enfant valide'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                    return;
-                  }
-
-                  if (selectedMonth == null || selectedYear == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Veuillez sélectionner un mois et une année'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                    return;
-                  }
-
-                  try {
-                    // Combine month and year
-                    final selectedMois = "$selectedMonth $selectedYear";
-
-                    final montantDu = int.tryParse(montantDuController.text) ?? 0;
-                    final montantPaye = int.tryParse(montantPayeController.text) ?? 0;
-                    final reste = montantDu - montantPaye;
-
-                    // Determine status
-                    StatutPaiements statut;
-                    if (montantPaye == 0) {
-                      statut = StatutPaiements.impaye;
-                    } else if (montantPaye >= montantDu) {
-                      statut = StatutPaiements.paye;
-                    } else {
-                      statut = StatutPaiements.partiel;
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text("Annuler"),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    // Valider le formulaire
+                    if (!formKey.currentState!.validate()) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Veuillez corriger les erreurs'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
                     }
 
-                    final newPaiement = Paiement(
-                      date: selectedDate,
-                      mois: selectedMois,
-                      montantdu: montantDu,
-                      montantPaye: montantPaye,
-                      reste: reste,
-                      statut: statut,
-                    );
+                    // Validation manuelle supplémentaire
+                    if (selectedEnfant == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Veuillez sélectionner un enfant valide',
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
 
-                    await _addPaiement(selectedEnfant!, newPaiement);
-                    Navigator.of(context).pop();
-                    
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Erreur: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                },
-                child: const Text("Enregistrer"),
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
-}
+                    if (selectedMonth == null || selectedYear == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Veuillez sélectionner un mois et une année',
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+
+                    try {
+                      // Combine month and year
+                      final selectedMois = "$selectedMonth $selectedYear";
+
+                      final montantDu =
+                          int.tryParse(montantDuController.text) ?? 0;
+                      final montantPaye =
+                          int.tryParse(montantPayeController.text) ?? 0;
+                      final reste = montantDu - montantPaye;
+
+                      // Determine status
+                      StatutPaiements statut;
+                      if (montantPaye == 0) {
+                        statut = StatutPaiements.impaye;
+                      } else if (montantPaye >= montantDu) {
+                        statut = StatutPaiements.paye;
+                      } else {
+                        statut = StatutPaiements.partiel;
+                      }
+
+                      final newPaiement = Paiement(
+                        date: selectedDate,
+                        mois: selectedMois,
+                        montantdu: montantDu,
+                        montantPaye: montantPaye,
+                        reste: reste,
+                        statut: statut,
+                      );
+
+                      final navigator = Navigator.of(dialogCtx);
+                      await _addPaiement(selectedEnfant!, newPaiement);
+                      if (dialogCtx.mounted) {
+                        navigator.pop();
+                      }
+                    } catch (e) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Erreur: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text("Enregistrer"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   void _showEditPaiementDialog(Enfant enfant, Paiement paiement) {
-    final _formKey = GlobalKey<FormState>();
+    final formKey = GlobalKey<FormState>();
     final montantDuController = TextEditingController(
       text: paiement.montantdu.toString(),
     );
@@ -838,15 +854,15 @@ class _SuiviPaiementsScreenState extends State<SuiviPaiementsScreen> {
 
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogCtx) {
         return StatefulBuilder(
-          builder: (context, setDialogState) {
+          builder: (contentCtx, setDialogState) {
             return AlertDialog(
               title: const Text("Modifier le paiement"),
               content: SizedBox(
                 width: 500,
                 child: Form(
-                  key: _formKey,
+                  key: formKey,
                   child: SingleChildScrollView(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -871,7 +887,7 @@ class _SuiviPaiementsScreenState extends State<SuiviPaiementsScreen> {
                                   labelText: "Mois",
                                   border: OutlineInputBorder(),
                                 ),
-                                value: selectedMonth,
+                                initialValue: selectedMonth,
                                 items: months
                                     .map(
                                       (m) => DropdownMenuItem(
@@ -893,7 +909,7 @@ class _SuiviPaiementsScreenState extends State<SuiviPaiementsScreen> {
                                   labelText: "Année",
                                   border: OutlineInputBorder(),
                                 ),
-                                value: selectedYear,
+                                initialValue: selectedYear,
                                 items: years
                                     .map(
                                       (y) => DropdownMenuItem(
@@ -988,7 +1004,7 @@ class _SuiviPaiementsScreenState extends State<SuiviPaiementsScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    if (_formKey.currentState!.validate() &&
+                    if (formKey.currentState!.validate() &&
                         selectedMonth != null &&
                         selectedYear != null) {
                       // Combine month and year
@@ -1019,8 +1035,11 @@ class _SuiviPaiementsScreenState extends State<SuiviPaiementsScreen> {
                         statut: statut,
                       );
 
+                      final navigator = Navigator.of(dialogCtx);
                       await _updatePaiement(enfant.id, updatedPaiement);
-                      Navigator.of(context).pop();
+                      if (dialogCtx.mounted) {
+                        navigator.pop();
+                      }
                     } else {
                       // Afficher un message d'erreur si la validation échoue
                       ScaffoldMessenger.of(context).showSnackBar(

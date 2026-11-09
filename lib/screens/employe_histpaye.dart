@@ -46,14 +46,16 @@ class _PaiementEmployeScreenState extends State<PaiementEmployeScreen> {
       // Update the employee with the modified payment
       widget.employe.paiements = paiements;
       await _employeDao.updateEmploye(widget.employe);
-      
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Paiement mis à jour avec succès')),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur: ${e.toString()}')),
-      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erreur: ${e.toString()}')));
     }
   }
 
@@ -195,16 +197,14 @@ class _PaiementEmployeScreenState extends State<PaiementEmployeScreen> {
                   style: const TextStyle(fontSize: 18),
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: isEditing 
-                        ? Colors.blue.shade50 
+                    fillColor: isEditing
+                        ? Colors.blue.shade50
                         : Colors.grey.shade100,
                     contentPadding: const EdgeInsets.symmetric(vertical: 6),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(6),
                       borderSide: BorderSide(
-                        color: isEditing 
-                            ? Colors.blue 
-                            : Colors.grey.shade400
+                        color: isEditing ? Colors.blue : Colors.grey.shade400,
                       ),
                     ),
                   ),
@@ -234,11 +234,9 @@ class _PaiementEmployeScreenState extends State<PaiementEmployeScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6),
                 decoration: BoxDecoration(
-                  color: getColor(paiement.statut).withOpacity(0.1),
+                  color: getColor(paiement.statut).withValues(alpha: 0.1),
                   border: Border.all(
-                    color: isEditing 
-                        ? Colors.blue 
-                        : getColor(paiement.statut)
+                    color: isEditing ? Colors.blue : getColor(paiement.statut),
                   ),
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -260,7 +258,8 @@ class _PaiementEmployeScreenState extends State<PaiementEmployeScreen> {
                         ),
                       );
                     }).toList(),
-                    onChanged: isEditing // Only enabled when editing
+                    onChanged:
+                        isEditing // Only enabled when editing
                         ? (val) {
                             if (val != null) {
                               setState(() {

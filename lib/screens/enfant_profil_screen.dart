@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:creche_manager/screens/progression.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Added for input formatters
@@ -54,9 +53,14 @@ class _EnfantProfilScreenState extends State<EnfantProfilScreen> {
   // For class autocomplete
   List<String> classSuggestions = [];
   final FocusNode _classeFocusNode = FocusNode();
-  
+
   // Options for statut familial dropdown
-  final List<String> statutFamilialOptions = ['Mariés', 'Divorcés', 'Veufs', 'Autre'];
+  final List<String> statutFamilialOptions = [
+    'Mariés',
+    'Divorcés',
+    'Veufs',
+    'Autre',
+  ];
 
   // For date inscription editing
   bool _isEditingDateInscription = false;
@@ -214,7 +218,8 @@ class _EnfantProfilScreenState extends State<EnfantProfilScreen> {
 
   // Load image from file path
   Future<void> _loadImageFromPath() async {
-    if (widget.enfant.photoPath != null && widget.enfant.photoPath!.isNotEmpty) {
+    if (widget.enfant.photoPath != null &&
+        widget.enfant.photoPath!.isNotEmpty) {
       final file = File(widget.enfant.photoPath!);
       if (await file.exists()) {
         setState(() {
@@ -235,36 +240,36 @@ class _EnfantProfilScreenState extends State<EnfantProfilScreen> {
   }
 
   // ✅ Generate next ID like ENF-001, ENF-002
-Future<String> _generateNextId() async {
-  final enfants = await _enfantDao.getAllEnfants();
-  
-  if (enfants.isEmpty) return "ENF-001";
-  
-  // Find all existing ENF numbers
-  final existingNumbers = <int>{};
-  final regExp = RegExp(r'^ENF-(\d+)$');
-  
-  for (final enfant in enfants) {
-    final match = regExp.firstMatch(enfant.id);
-    if (match != null) {
-      final number = int.tryParse(match.group(1)!);
-      if (number != null) {
-        existingNumbers.add(number);
+  Future<String> _generateNextId() async {
+    final enfants = await _enfantDao.getAllEnfants();
+
+    if (enfants.isEmpty) return "ENF-001";
+
+    // Find all existing ENF numbers
+    final existingNumbers = <int>{};
+    final regExp = RegExp(r'^ENF-(\d+)$');
+
+    for (final enfant in enfants) {
+      final match = regExp.firstMatch(enfant.id);
+      if (match != null) {
+        final number = int.tryParse(match.group(1)!);
+        if (number != null) {
+          existingNumbers.add(number);
+        }
       }
     }
+
+    // If no valid ENF IDs found, start from 1
+    if (existingNumbers.isEmpty) return "ENF-001";
+
+    // Find the next available number
+    int nextNumber = 1;
+    while (existingNumbers.contains(nextNumber)) {
+      nextNumber++;
+    }
+
+    return "ENF-${nextNumber.toString().padLeft(3, '0')}";
   }
-  
-  // If no valid ENF IDs found, start from 1
-  if (existingNumbers.isEmpty) return "ENF-001";
-  
-  // Find the next available number
-  int nextNumber = 1;
-  while (existingNumbers.contains(nextNumber)) {
-    nextNumber++;
-  }
-  
-  return "ENF-${nextNumber.toString().padLeft(3, '0')}";
-}
 
   // ✅ Build Enfant object from form
   Future<Enfant> _buildEnfant() async {
@@ -304,8 +309,8 @@ Future<String> _generateNextId() async {
       return FileImage(_imageFile!);
     } else if (_selectedImage != null) {
       return MemoryImage(_selectedImage!);
-    } else if (widget.enfant.photoPath != null && 
-               widget.enfant.photoPath!.isNotEmpty) {
+    } else if (widget.enfant.photoPath != null &&
+        widget.enfant.photoPath!.isNotEmpty) {
       final file = File(widget.enfant.photoPath!);
       if (file.existsSync()) {
         return FileImage(file);
@@ -355,10 +360,12 @@ Future<String> _generateNextId() async {
       // Return true to indicate successful save
       return true;
     } catch (e) {
-      print('Erreur lors de la sauvegarde: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Erreur lors de la sauvegarde')),
-      );
+      debugPrint('Erreur lors de la sauvegarde: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Erreur lors de la sauvegarde')),
+        );
+      }
 
       // Return false to indicate failure
       return false;
@@ -371,27 +378,33 @@ Future<String> _generateNextId() async {
 
     try {
       final profilesDir = await _getProfilesDirectory();
-      final imageFile = File(path.join(profilesDir.path, 'enfant_${widget.enfant.id}.jpg'));
-      
+      final imageFile = File(
+        path.join(profilesDir.path, 'enfant_${widget.enfant.id}.jpg'),
+      );
+
       await imageFile.writeAsBytes(_selectedImage!);
-      
+
       // Update the enfant's photoPath
       widget.enfant.photoPath = imageFile.path;
-      
+
       setState(() {
         _imageFile = imageFile;
         _selectedImage = null; // Clear the temporary selection
       });
-      
-      print('Image sauvegardée: ${imageFile.path}');
+
+      debugPrint('Image sauvegardée: ${imageFile.path}');
     } catch (e) {
-      print('Erreur lors de la sauvegarde de l\'image: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur lors de la sauvegarde de l\'image: ${e.toString()}'),
-          duration: const Duration(seconds: 3),
-        ),
-      );
+      debugPrint('Erreur lors de la sauvegarde de l\'image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Erreur lors de la sauvegarde de l\'image: ${e.toString()}',
+            ),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -427,13 +440,14 @@ Future<String> _generateNextId() async {
 
     if (confirm == true) {
       // Delete the profile image if it exists
-      if (widget.enfant.photoPath != null && widget.enfant.photoPath!.isNotEmpty) {
+      if (widget.enfant.photoPath != null &&
+          widget.enfant.photoPath!.isNotEmpty) {
         final imageFile = File(widget.enfant.photoPath!);
         if (await imageFile.exists()) {
           await imageFile.delete();
         }
       }
-      
+
       await _enfantDao.deleteEnfant(widget.enfant.id);
       if (mounted) {
         ScaffoldMessenger.of(
@@ -447,7 +461,7 @@ Future<String> _generateNextId() async {
   // Toggle activation status
   Future<void> _toggleActivationStatus() async {
     final newStatus = !widget.enfant.estActif;
-    
+
     // Show confirmation dialog
     bool confirm = await showDialog(
       context: context,
@@ -455,9 +469,9 @@ Future<String> _generateNextId() async {
         return AlertDialog(
           title: Text(newStatus ? 'Activer l\'enfant' : 'Désactiver l\'enfant'),
           content: Text(
-            newStatus 
-              ? 'Êtes-vous sûr de vouloir activer cet enfant ?'
-              : 'Êtes-vous sûr de vouloir désactiver cet enfant ?',
+            newStatus
+                ? 'Êtes-vous sûr de vouloir activer cet enfant ?'
+                : 'Êtes-vous sûr de vouloir désactiver cet enfant ?',
           ),
           actions: <Widget>[
             TextButton(
@@ -502,10 +516,10 @@ Future<String> _generateNextId() async {
         );
 
         await _enfantDao.updateEnfant(updatedEnfant);
-        
+
         // Update the local widget state
         widget.enfant.estActif = newStatus;
-        
+
         setState(() {
           _hasUnsavedChanges = true;
         });
@@ -514,18 +528,22 @@ Future<String> _generateNextId() async {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                newStatus 
-                  ? 'Enfant activé avec succès ✅'
-                  : 'Enfant désactivé avec succès ⚠️',
+                newStatus
+                    ? 'Enfant activé avec succès ✅'
+                    : 'Enfant désactivé avec succès ⚠️',
               ),
             ),
           );
         }
       } catch (e) {
-        print('Erreur lors de la modification du statut: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Erreur lors de la modification du statut')),
-        );
+        debugPrint('Erreur lors de la modification du statut: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Erreur lors de la modification du statut'),
+            ),
+          );
+        }
       }
     }
   }
@@ -533,7 +551,7 @@ Future<String> _generateNextId() async {
   void _showUnsavedChangesDialog() {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Modifications non enregistrées'),
           content: const Text(
@@ -543,22 +561,25 @@ Future<String> _generateNextId() async {
             TextButton(
               child: const Text('Annuler'),
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop();
               },
             ),
             TextButton(
               child: const Text('Ignorer'),
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop();
                 Navigator.of(context).pop();
               },
             ),
             ElevatedButton(
               child: const Text('Enregistrer'),
               onPressed: () async {
-                Navigator.of(context).pop();
+                final navigator = Navigator.of(context);
+                Navigator.of(dialogContext).pop();
                 await _saveEnfant();
-                Navigator.of(context).pop();
+                if (mounted) {
+                  navigator.pop();
+                }
               },
             ),
           ],
@@ -581,7 +602,7 @@ Future<String> _generateNextId() async {
               primary: Colors.blue,
               onPrimary: Colors.white,
             ),
-            dialogBackgroundColor: Colors.white,
+            dialogTheme: const DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );
@@ -612,7 +633,7 @@ Future<String> _generateNextId() async {
               primary: Colors.blue,
               onPrimary: Colors.white,
             ),
-            dialogBackgroundColor: Colors.white,
+            dialogTheme: const DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );
@@ -638,7 +659,7 @@ Future<String> _generateNextId() async {
         // If canceling edit, restore original date
         if (_originalDateInscription != null) {
           widget.enfant.dateInscription = _originalDateInscription;
-          _dateInscriptionController.text = 
+          _dateInscriptionController.text =
               "${_originalDateInscription!.day.toString().padLeft(2, '0')}/"
               "${_originalDateInscription!.month.toString().padLeft(2, '0')}/"
               "${_originalDateInscription!.year}";
@@ -657,25 +678,26 @@ Future<String> _generateNextId() async {
         allowedExtensions: ['jpg', 'jpeg', 'png', 'bmp', 'gif'],
         allowMultiple: false,
       );
-      
+
       if (result != null && result.files.isNotEmpty) {
         final file = result.files.first;
-        
+
         if (file.bytes != null) {
           setState(() {
             _selectedImage = file.bytes;
             _hasUnsavedChanges = true;
           });
-          
+
           // Preview the selected image
           final tempDir = await getTemporaryDirectory();
           final tempFile = File(path.join(tempDir.path, 'temp_image.jpg'));
           await tempFile.writeAsBytes(_selectedImage!);
-          
+
           setState(() {
             _imageFile = tempFile;
           });
-          
+
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Image sélectionnée: ${file.name}')),
           );
@@ -686,21 +708,25 @@ Future<String> _generateNextId() async {
             _selectedImage = fileBytes;
             _hasUnsavedChanges = true;
           });
-          
+
           setState(() {
             _imageFile = File(file.path!);
           });
-          
+
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Image sélectionnée: ${file.name}')),
           );
         }
       }
     } catch (e) {
-      print('Erreur lors de la sélection de l\'image: $e');
+      debugPrint('Erreur lors de la sélection de l\'image: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erreur lors de la sélection de l\'image: ${e.toString()}'),
+          content: Text(
+            'Erreur lors de la sélection de l\'image: ${e.toString()}',
+          ),
           duration: const Duration(seconds: 3),
         ),
       );
@@ -833,7 +859,9 @@ Future<String> _generateNextId() async {
       return Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: DropdownButtonFormField<String>(
-          value: ['Masculin', 'Féminin'].contains(controller.text) ? controller.text : null,
+          initialValue: ['Masculin', 'Féminin'].contains(controller.text)
+              ? controller.text
+              : null,
           decoration: InputDecoration(
             labelText: label,
             border: const OutlineInputBorder(),
@@ -914,16 +942,15 @@ Future<String> _generateNextId() async {
       return Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: DropdownButtonFormField<String>(
-          value: statutFamilialOptions.contains(controller.text) ? controller.text : null,
+          initialValue: statutFamilialOptions.contains(controller.text)
+              ? controller.text
+              : null,
           decoration: InputDecoration(
             labelText: label,
             border: const OutlineInputBorder(),
           ),
           items: statutFamilialOptions.map((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
-            );
+            return DropdownMenuItem<String>(value: value, child: Text(value));
           }).toList(),
           onChanged: (value) {
             setState(() {
@@ -974,7 +1001,9 @@ Future<String> _generateNextId() async {
       child: ElevatedButton(
         onPressed: _toggleActivationStatus,
         style: ElevatedButton.styleFrom(
-          backgroundColor: widget.enfant.estActif ? Colors.orange : Colors.green,
+          backgroundColor: widget.enfant.estActif
+              ? Colors.orange
+              : Colors.green,
           padding: const EdgeInsets.symmetric(vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
@@ -1074,10 +1103,7 @@ Future<String> _generateNextId() async {
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Text(
             "Date d'inscription : ${_dateInscriptionController.text}",
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ),
       );
@@ -1167,7 +1193,8 @@ Future<String> _generateNextId() async {
                 ElevatedButton.icon(
                   onPressed: () async {
                     final success = await _saveEnfant();
-                    if (success && mounted) {
+                    if (!context.mounted) return;
+                    if (success) {
                       Navigator.of(
                         context,
                       ).pop(true); // Return true to parent screen
@@ -1248,14 +1275,16 @@ Future<String> _generateNextId() async {
                                 widget.enfant,
                                 accompagnateurs,
                               );
+                              if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
+                                const SnackBar(
                                   content: Text(
                                     "Fiche enfant générée et sauvegardée ✅",
                                   ),
                                 ),
                               );
                             } catch (e) {
+                              if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
@@ -1299,7 +1328,7 @@ Future<String> _generateNextId() async {
                             }
                           },
                         ),
-                         _buildBlueButton(
+                        _buildBlueButton(
                           "EVALUATION",
                           onPressed: () {
                             if (_hasUnsavedChanges) {
@@ -1315,7 +1344,7 @@ Future<String> _generateNextId() async {
                             }
                           },
                         ),
-                        
+
                         // DATE D'INSCRIPTION EN BAS DES BOUTONS BLEUS
                         const SizedBox(height: 20),
                         _buildDateInscriptionWidget(),
@@ -1430,9 +1459,9 @@ Future<String> _generateNextId() async {
                           label: const Text("Ajouter un accompagnateur"),
                         ),
                         const SizedBox(height: 16),
-                        ...accompagnateurs
-                            .map((acc) => _buildAccompagnateurCard(acc))
-                            .toList(),
+                        ...accompagnateurs.map(
+                          (acc) => _buildAccompagnateurCard(acc),
+                        ),
                         const SizedBox(height: 32),
                         const Divider(thickness: 1),
                         const Text(

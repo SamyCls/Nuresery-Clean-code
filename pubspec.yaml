@@ -79,8 +79,8 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
   assets:
-    - C:\Users\dif\creche_manager\assets\images\login.png
-    - C:\Users\dif\creche_manager\assets/pdf/ficheenfant.png
+    - assets/images/login.png
+    - assets/pdf/ficheenfant.png
     - assets/images/whatsapp.png
 
   # The following line ensures that the Material Icons font is

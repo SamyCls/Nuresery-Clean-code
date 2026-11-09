@@ -1,8 +1,7 @@
-// app_state.dart
 import '/models/utilisateurs.dart';
 
-// Variable globale pour stocker l'utilisateur connecté
+// Current authenticated user
 AppUser? currentUser;
 
-// Route active dans la sidebar
+// Active route in the sidebar navigation
 String currentSidebarRoute = '/';

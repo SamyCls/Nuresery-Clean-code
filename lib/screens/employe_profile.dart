@@ -45,12 +45,16 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
     super.initState();
     _dateFormat = DateFormat('dd/MM/yyyy');
     _isNewEmployee = widget.employeeId == null;
-    
+
     // Initialiser les contrôleurs avec des valeurs vides
     _nomController = TextEditingController();
     _prenomController = TextEditingController();
-    _dateNaissanceController = TextEditingController(text: _dateFormat.format(DateTime.now()));
-    _dateEmbaucheController = TextEditingController(text: _dateFormat.format(DateTime.now()));
+    _dateNaissanceController = TextEditingController(
+      text: _dateFormat.format(DateTime.now()),
+    );
+    _dateEmbaucheController = TextEditingController(
+      text: _dateFormat.format(DateTime.now()),
+    );
     _posteController = TextEditingController();
     _salaireController = TextEditingController(text: "0.0");
     _telephoneController = TextEditingController();
@@ -87,22 +91,26 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
   Future<void> _loadEmployeeData() async {
     try {
       final employe = await _employeDao.getEmployeById(widget.employeeId!);
-      
+
       if (employe != null) {
         setState(() {
           employee = employe;
           estActif = employee!.estActif;
-          
+
           _nomController.text = employee!.nom;
           _prenomController.text = employee!.prenom;
-          _dateNaissanceController.text = _dateFormat.format(employee!.dateNaissance);
-          _dateEmbaucheController.text = _dateFormat.format(employee!.dateEmbauche);
+          _dateNaissanceController.text = _dateFormat.format(
+            employee!.dateNaissance,
+          );
+          _dateEmbaucheController.text = _dateFormat.format(
+            employee!.dateEmbauche,
+          );
           _posteController.text = employee!.poste;
           _salaireController.text = employee!.salaire.toStringAsFixed(2);
           _telephoneController.text = employee!.telephone;
           _adresseController.text = employee!.adresse;
           _imagePath = employee!.photoUrl;
-          
+
           _isLoading = false;
           _hasUnsavedChanges = false;
         });
@@ -111,9 +119,9 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
           setState(() {
             _isLoading = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Employé non trouvé')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Employé non trouvé')));
           Navigator.of(context).pop();
         }
       }
@@ -124,7 +132,9 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Erreur lors du chargement des données')),
+          const SnackBar(
+            content: Text('Erreur lors du chargement des données'),
+          ),
         );
       }
     }
@@ -141,7 +151,7 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
     _salaireController.removeListener(_markAsChanged);
     _telephoneController.removeListener(_markAsChanged);
     _adresseController.removeListener(_markAsChanged);
-    
+
     // Dispose controllers
     _nomController.dispose();
     _prenomController.dispose();
@@ -157,21 +167,21 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
   Future<String> _generateNewEmployeeId() async {
     final allEmployes = await _employeDao.getAllEmployes();
     final existingIds = allEmployes.map((e) => e.id).toList();
-    
+
     int counter = 1;
     String newId;
     do {
       newId = 'EMP-${counter.toString().padLeft(3, '0')}';
       counter++;
     } while (existingIds.contains(newId));
-    
+
     return newId;
   }
 
   Future<void> _saveEmployee() async {
     try {
       final newId = await _generateNewEmployeeId();
-      
+
       final newEmploye = Employe(
         id: newId,
         nom: _capitalizeFirstLetter(_nomController.text),
@@ -188,12 +198,12 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
       );
 
       await _employeDao.insertEmploye(newEmploye);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Employé créé avec succès')),
         );
-        
+
         Navigator.of(context).pop();
       }
     } catch (e) {
@@ -219,17 +229,18 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
         telephone: _telephoneController.text,
         adresse: _adresseController.text,
         estActif: estActif,
-        photoUrl: _imagePath ?? employee!.photoUrl, // Use new image path if available
+        photoUrl:
+            _imagePath ?? employee!.photoUrl, // Use new image path if available
         paiements: employee!.paiements,
       );
 
       await _employeDao.updateEmploye(updatedEmploye);
-      
+
       if (mounted) {
         setState(() {
           _hasUnsavedChanges = false;
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Employé mis à jour avec succès')),
         );
@@ -318,7 +329,9 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
       debugPrint('Erreur lors de la sélection de l\'image: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Erreur lors de la sélection de l\'image')),
+          const SnackBar(
+            content: Text('Erreur lors de la sélection de l\'image'),
+          ),
         );
       }
     }
@@ -338,9 +351,9 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
   void _printContract() {
     // Implement your contract printing logic here
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Impression du contrat')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Impression du contrat')));
     }
   }
 
@@ -348,22 +361,29 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
     if (_isNewEmployee) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Veuillez d\'abord enregistrer l\'employé')),
+          const SnackBar(
+            content: Text('Veuillez d\'abord enregistrer l\'employé'),
+          ),
         );
       }
       return;
     }
 
     TextEditingController moisController = TextEditingController();
-    TextEditingController salaireController = TextEditingController(text: employee!.salaire.toStringAsFixed(2));
+    TextEditingController salaireController = TextEditingController(
+      text: employee!.salaire.toStringAsFixed(2),
+    );
     TextEditingController montantController = TextEditingController();
     TextEditingController primeController = TextEditingController(text: "0.0");
-    TextEditingController datePaiementController = TextEditingController(text: _dateFormat.format(DateTime.now()));
+    TextEditingController datePaiementController = TextEditingController(
+      text: _dateFormat.format(DateTime.now()),
+    );
 
     // Initialize with current month and year
     DateTime selectedMonth = DateTime.now();
-    moisController.text = "${_getMonthName(selectedMonth.month)} ${selectedMonth.year}";
-    
+    moisController.text =
+        "${_getMonthName(selectedMonth.month)} ${selectedMonth.year}";
+
     // Calculate initial amount (salaire + prime)
     double primeValue = double.tryParse(primeController.text) ?? 0.0;
     double salaireValue = double.tryParse(salaireController.text) ?? 0.0;
@@ -371,7 +391,7 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
 
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogCtx) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -395,42 +415,47 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
                   (DateTime newMonth) {
                     setState(() {
                       selectedMonth = newMonth;
-                      moisController.text = "${_getMonthName(newMonth.month)} ${newMonth.year}";
+                      moisController.text =
+                          "${_getMonthName(newMonth.month)} ${newMonth.year}";
                     });
                   },
                 ),
-                
+
                 _buildPaymentField(
                   Icons.attach_money,
                   "SALAIRE",
                   salaireController,
                   onChanged: (value) {
                     // Recalculate amount when salary changes
-                    double primeValue = double.tryParse(primeController.text) ?? 0.0;
+                    double primeValue =
+                        double.tryParse(primeController.text) ?? 0.0;
                     double salaireValue = double.tryParse(value) ?? 0.0;
-                    montantController.text = (salaireValue + primeValue).toStringAsFixed(2);
+                    montantController.text = (salaireValue + primeValue)
+                        .toStringAsFixed(2);
                   },
                 ),
-                
+
                 _buildPaymentField(
-                  Icons.payment, 
-                  "PRIMES", 
+                  Icons.payment,
+                  "PRIMES",
                   primeController,
                   onChanged: (value) {
                     // Recalculate amount when prime changes
                     double primeValue = double.tryParse(value) ?? 0.0;
-                    double salaireValue = double.tryParse(salaireController.text) ?? 0.0;
-                    montantController.text = (salaireValue + primeValue).toStringAsFixed(2);
+                    double salaireValue =
+                        double.tryParse(salaireController.text) ?? 0.0;
+                    montantController.text = (salaireValue + primeValue)
+                        .toStringAsFixed(2);
                   },
                 ),
-                
+
                 // Read-only amount field
                 _buildReadOnlyPaymentField(
                   Icons.money_off,
                   "MONTANT PAYÉ",
                   montantController,
                 ),
-                
+
                 _buildDatePickerFieldDialog(
                   Icons.date_range,
                   "DATE PAIEMENT",
@@ -451,7 +476,7 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                       ),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => Navigator.pop(dialogCtx),
                     ),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.add, color: Colors.white),
@@ -465,7 +490,9 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
                       onPressed: () async {
                         try {
                           final nouveauPaiement = PaiementEmploye(
-                            datePaiement: _parseDate(datePaiementController.text),
+                            datePaiement: _parseDate(
+                              datePaiementController.text,
+                            ),
                             mois: moisController.text,
                             salaireBase: double.parse(salaireController.text),
                             prime: double.tryParse(primeController.text) ?? 0.0,
@@ -475,22 +502,28 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
 
                           employee!.paiements.add(nouveauPaiement);
                           await _employeDao.updateEmploye(employee!);
-                          
-                          Navigator.pop(context);
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Paiement ajouté avec succès')),
-                            );
+
+                          if (dialogCtx.mounted) {
+                            Navigator.pop(dialogCtx);
                           }
-                          
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Paiement ajouté avec succès'),
+                            ),
+                          );
+
                           await _loadEmployeeData();
                         } catch (e) {
                           debugPrint('Erreur lors de l\'ajout du paiement: $e');
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Erreur lors de l\'ajout du paiement')),
-                            );
-                          }
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Erreur lors de l\'ajout du paiement',
+                              ),
+                            ),
+                          );
                         }
                       },
                     ),
@@ -507,8 +540,18 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
   // Helper method to get month name in French
   String _getMonthName(int month) {
     final months = [
-      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+      'Janvier',
+      'Février',
+      'Mars',
+      'Avril',
+      'Mai',
+      'Juin',
+      'Juillet',
+      'Août',
+      'Septembre',
+      'Octobre',
+      'Novembre',
+      'Décembre',
     ];
     return months[month - 1];
   }
@@ -548,6 +591,7 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
           );
 
           if (pickedYear != null) {
+            if (!mounted) return;
             // Then show month picker
             final DateTime? pickedMonth = await showDialog(
               context: context,
@@ -563,14 +607,19 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
                         final month = index + 1;
                         return InkWell(
                           onTap: () {
-                            Navigator.pop(context, DateTime(pickedYear.year, month));
+                            Navigator.pop(
+                              context,
+                              DateTime(pickedYear.year, month),
+                            );
                           },
                           child: Card(
                             child: Center(
                               child: Text(
                                 _getMonthName(month),
                                 style: TextStyle(
-                                  fontWeight: month == initialDate.month ? FontWeight.bold : FontWeight.normal,
+                                  fontWeight: month == initialDate.month
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
                                 ),
                               ),
                             ),
@@ -594,7 +643,9 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
             decoration: InputDecoration(
               prefixIcon: Icon(icon),
               labelText: label,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
               suffixIcon: const Icon(Icons.arrow_drop_down),
             ),
           ),
@@ -673,7 +724,9 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
             decoration: InputDecoration(
               prefixIcon: Icon(icon),
               labelText: label,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
               suffixIcon: const Icon(Icons.calendar_today),
             ),
           ),
@@ -681,16 +734,11 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
       ),
     );
   }
-  
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return MainLayout(
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return MainLayout(child: Center(child: CircularProgressIndicator()));
     }
 
     return MainLayout(
@@ -715,9 +763,9 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      _isNewEmployee 
-                        ? "Créer un nouvel employé"
-                        : "Profil de : ${_nomController.text} ${_prenomController.text}",
+                      _isNewEmployee
+                          ? "Créer un nouvel employé"
+                          : "Profil de : ${_nomController.text} ${_prenomController.text}",
                       style: const TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.bold,
@@ -760,8 +808,16 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildTextField("Nom", _nomController, capitalize: true),
-                          _buildTextField("Prénom", _prenomController, capitalize: true),
+                          _buildTextField(
+                            "Nom",
+                            _nomController,
+                            capitalize: true,
+                          ),
+                          _buildTextField(
+                            "Prénom",
+                            _prenomController,
+                            capitalize: true,
+                          ),
                           _buildDatePickerField(
                             "Date de naissance",
                             _dateNaissanceController,
@@ -776,9 +832,15 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
                           const SizedBox(height: 20),
                           if (!_isNewEmployee) ...[
                             // New print buttons
-                            _buildBlueButton("IMPRIMER FICHE DE PAIE", _printPayslip),
+                            _buildBlueButton(
+                              "IMPRIMER FICHE DE PAIE",
+                              _printPayslip,
+                            ),
                             const SizedBox(height: 10),
-                            _buildBlueButton("IMPRIMER CONTRAT", _printContract),
+                            _buildBlueButton(
+                              "IMPRIMER CONTRAT",
+                              _printContract,
+                            ),
                             const SizedBox(height: 10),
                             _buildBlueButton(
                               "AJOUTER PAIEMENT",
@@ -792,8 +854,9 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        PaiementEmployeScreen(employe: employee!),
+                                    builder: (context) => PaiementEmployeScreen(
+                                      employe: employee!,
+                                    ),
                                   ),
                                 );
                               }
@@ -838,7 +901,10 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
                           const SizedBox(height: 20),
                           _buildTextField("Poste", _posteController),
                           _buildNumericTextField("Salaire", _salaireController),
-                          _buildNumericTextField("Téléphone", _telephoneController),
+                          _buildNumericTextField(
+                            "Téléphone",
+                            _telephoneController,
+                          ),
                           _buildTextField("Adresse", _adresseController),
 
                           const SizedBox(height: 10),
@@ -915,7 +981,8 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
         return AlertDialog(
           title: const Text('Modifications non enregistrées'),
           content: const Text(
-              'Vous avez des modifications non enregistrées. Voulez-vous les enregistrer avant de continuer ?'),
+            'Vous avez des modifications non enregistrées. Voulez-vous les enregistrer avant de continuer ?',
+          ),
           actions: <Widget>[
             TextButton(
               child: const Text('Annuler'),
@@ -933,10 +1000,11 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
             ElevatedButton(
               child: const Text('Enregistrer'),
               onPressed: () async {
-                Navigator.of(context).pop();
+                final navigator = Navigator.of(context);
+                navigator.pop();
                 await _updateEmployee();
                 if (mounted) {
-                  Navigator.of(context).pop();
+                  navigator.pop();
                 }
               },
             ),
@@ -946,7 +1014,11 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {bool capitalize = false}) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    bool capitalize = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Column(
@@ -979,7 +1051,10 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
     );
   }
 
-  Widget _buildNumericTextField(String label, TextEditingController controller) {
+  Widget _buildNumericTextField(
+    String label,
+    TextEditingController controller,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Column(
@@ -989,7 +1064,7 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
           const SizedBox(height: 5),
           TextField(
             controller: controller,
-            keyboardType: label == "Salaire" 
+            keyboardType: label == "Salaire"
                 ? TextInputType.numberWithOptions(decimal: true)
                 : TextInputType.phone,
             decoration: InputDecoration(

@@ -43,12 +43,15 @@ class _DepensesScreenState extends State<DepensesScreen> {
     'Salaires',
     'Loyer',
     'Assurance',
-    'Équipement'
+    'Équipement',
   ];
-  
+
   // Custom categories that can be added by the user
   List<String> customCategories = [];
-  List<String> get allCategories => [...predefinedCategories, ...customCategories];
+  List<String> get allCategories => [
+    ...predefinedCategories,
+    ...customCategories,
+  ];
 
   @override
   void initState() {
@@ -57,11 +60,17 @@ class _DepensesScreenState extends State<DepensesScreen> {
     _loadCustomCategories();
   }
 
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadCustomCategories() async {
     // Load custom categories from database or shared preferences
     final depenses = await _depenseDao.getAllDepenses();
     final categoriesFromDb = depenses.map((d) => d.categorie).toSet();
-    
+
     setState(() {
       customCategories = categoriesFromDb
           .where((cat) => !predefinedCategories.contains(cat))
@@ -90,14 +99,17 @@ class _DepensesScreenState extends State<DepensesScreen> {
       for (var payment in employee.paiements) {
         // Only include paid salaries
         if (payment.statut == StatutPaiement.paye) {
-          salaryDepenses.add(Depense(
-            id: 'salary_${employee.id}_${payment.mois}',
-            categorie: 'Salaires',
-            description: 'Salaire de ${employee.prenom} ${employee.nom} - ${payment.mois}',
-            montant: payment.montantPaye,
-            date: payment.datePaiement,
-            attestation: 'Paiement employé',
-          ));
+          salaryDepenses.add(
+            Depense(
+              id: 'salary_${employee.id}_${payment.mois}',
+              categorie: 'Salaires',
+              description:
+                  'Salaire de ${employee.prenom} ${employee.nom} - ${payment.mois}',
+              montant: payment.montantPaye,
+              date: payment.datePaiement,
+              attestation: 'Paiement employé',
+            ),
+          );
         }
       }
     }
@@ -148,7 +160,7 @@ class _DepensesScreenState extends State<DepensesScreen> {
 
         return true;
       }).toList();
-      
+
       // Sort by date descending
       depensesAffichees.sort((a, b) => b.date.compareTo(a.date));
     });
@@ -173,8 +185,18 @@ class _DepensesScreenState extends State<DepensesScreen> {
     final initial = filtreMois ?? DateTime(now.year, now.month, 1);
 
     const monthLabels = [
-      'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin',
-      'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc',
+      'Jan',
+      'Fév',
+      'Mar',
+      'Avr',
+      'Mai',
+      'Juin',
+      'Juil',
+      'Août',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Déc',
     ];
 
     DateTime? picked = await showDialog<DateTime>(
@@ -217,15 +239,18 @@ class _DepensesScreenState extends State<DepensesScreen> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: 12,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        mainAxisSpacing: 8,
-                        crossAxisSpacing: 8,
-                        childAspectRatio: 3,
-                      ),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            mainAxisSpacing: 8,
+                            crossAxisSpacing: 8,
+                            childAspectRatio: 3,
+                          ),
                       itemBuilder: (context, i) {
                         final month = i + 1;
-                        final isSelected = (tempYear == initial.year && month == selectedMonth);
+                        final isSelected =
+                            (tempYear == initial.year &&
+                            month == selectedMonth);
 
                         return OutlinedButton(
                           onPressed: () {
@@ -234,7 +259,9 @@ class _DepensesScreenState extends State<DepensesScreen> {
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             backgroundColor: isSelected
-                                ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
+                                ? Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withValues(alpha: 0.08)
                                 : null,
                           ),
                           child: Text(monthLabels[i]),
@@ -258,7 +285,10 @@ class _DepensesScreenState extends State<DepensesScreen> {
   }
 
   void choisirCategorie() {
-    final categories = [...allDepenses.map((d) => d.categorie).toSet(), 'Salaires']..sort();
+    final categories = [
+      ...allDepenses.map((d) => d.categorie).toSet(),
+      'Salaires',
+    ]..sort();
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -364,15 +394,19 @@ class _DepensesScreenState extends State<DepensesScreen> {
 
   void supprimerDepense(int index) {
     final depenseToDelete = depensesAffichees[index];
-    
+
     // Don't allow deletion of salary expenses
     if (depenseToDelete.categorie == 'Salaires') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Les salaires ne peuvent pas être supprimés ici. Utilisez l\'écran de gestion des employés.'))
+        const SnackBar(
+          content: Text(
+            'Les salaires ne peuvent pas être supprimés ici. Utilisez l\'écran de gestion des employés.',
+          ),
+        ),
       );
       return;
     }
-    
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -385,11 +419,11 @@ class _DepensesScreenState extends State<DepensesScreen> {
           ),
           TextButton(
             onPressed: () async {
+              Navigator.pop(ctx);
               await _depenseDao.deleteDepense(depenseToDelete.id);
               if (mounted) {
                 await _loadAllData();
               }
-              Navigator.pop(ctx);
             },
             child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
           ),
@@ -460,7 +494,7 @@ class _DepensesScreenState extends State<DepensesScreen> {
       context: context,
       barrierDismissible: true,
       barrierLabel: "Ajouter",
-      barrierColor: Colors.black.withOpacity(0.4),
+      barrierColor: Colors.black.withValues(alpha: 0.4),
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, anim1, anim2) => const SizedBox.shrink(),
       transitionBuilder: (context, anim, _, child) {
@@ -565,7 +599,9 @@ class _DepensesScreenState extends State<DepensesScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(DateFormat('dd/MM/yyyy').format(selectedDate)),
+                                Text(
+                                  DateFormat('dd/MM/yyyy').format(selectedDate),
+                                ),
                                 const Icon(Icons.calendar_today),
                               ],
                             ),
@@ -587,36 +623,46 @@ class _DepensesScreenState extends State<DepensesScreen> {
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             TextButton(
-                              style: TextButton.styleFrom(foregroundColor: Colors.red),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.red,
+                              ),
                               onPressed: () => Navigator.pop(context),
                               child: const Text("Annuler"),
                             ),
                             const SizedBox(width: 8),
                             ElevatedButton(
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                              ),
                               onPressed: () async {
-                                if (selectedCategory == null || selectedCategory!.isEmpty) {
+                                if (selectedCategory == null ||
+                                    selectedCategory!.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Veuillez sélectionner une catégorie'))
+                                    const SnackBar(
+                                      content: Text(
+                                        'Veuillez sélectionner une catégorie',
+                                      ),
+                                    ),
                                   );
                                   return;
                                 }
-                                
+
                                 final newDepense = Depense(
                                   categorie: selectedCategory!,
                                   description: descController.text,
-                                  montant: double.tryParse(montantController.text) ?? 0,
+                                  montant:
+                                      double.tryParse(montantController.text) ??
+                                      0,
                                   date: selectedDate,
                                   attestation: attestationController.text,
                                 );
-                                
+
+                                Navigator.pop(context);
                                 await _depenseDao.insertDepense(newDepense);
                                 if (mounted) {
                                   await _loadAllData();
                                   await _loadCustomCategories();
                                 }
-                                
-                                Navigator.pop(context);
                               },
                               child: const Text("Ajouter"),
                             ),
@@ -636,11 +682,15 @@ class _DepensesScreenState extends State<DepensesScreen> {
 
   void modifierDepense(int index) {
     final d = depensesAffichees[index];
-    
+
     // Don't allow editing of salary expenses (they come from employee payments)
     if (d.categorie == 'Salaires') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Les salaires ne peuvent pas être modifiés ici. Utilisez l\'écran de gestion des employés.'))
+        const SnackBar(
+          content: Text(
+            'Les salaires ne peuvent pas être modifiés ici. Utilisez l\'écran de gestion des employés.',
+          ),
+        ),
       );
       return;
     }
@@ -710,7 +760,7 @@ class _DepensesScreenState extends State<DepensesScreen> {
       context: context,
       barrierDismissible: true,
       barrierLabel: "Modifier",
-      barrierColor: Colors.black.withOpacity(0.4),
+      barrierColor: Colors.black.withValues(alpha: 0.4),
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, anim1, anim2) {
         return const SizedBox.shrink();
@@ -816,7 +866,9 @@ class _DepensesScreenState extends State<DepensesScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(DateFormat('dd/MM/yyyy').format(selectedDate)),
+                              Text(
+                                DateFormat('dd/MM/yyyy').format(selectedDate),
+                              ),
                               const Icon(Icons.calendar_today),
                             ],
                           ),
@@ -844,29 +896,35 @@ class _DepensesScreenState extends State<DepensesScreen> {
                           const SizedBox(width: 8),
                           ElevatedButton(
                             onPressed: () async {
-                              if (selectedCategory == null || selectedCategory!.isEmpty) {
+                              if (selectedCategory == null ||
+                                  selectedCategory!.isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Veuillez sélectionner une catégorie'))
+                                  const SnackBar(
+                                    content: Text(
+                                      'Veuillez sélectionner une catégorie',
+                                    ),
+                                  ),
                                 );
                                 return;
                               }
-                              
+
                               final updatedDepense = Depense(
                                 id: d.id,
                                 categorie: selectedCategory!,
                                 description: descController.text,
-                                montant: double.tryParse(montantController.text) ?? d.montant,
+                                montant:
+                                    double.tryParse(montantController.text) ??
+                                    d.montant,
                                 date: selectedDate,
                                 attestation: attestationController.text,
                               );
-                              
+
+                              Navigator.pop(context);
                               await _depenseDao.updateDepense(updatedDepense);
                               if (mounted) {
                                 await _loadAllData();
                                 await _loadCustomCategories();
                               }
-                              
-                              Navigator.pop(context);
                             },
                             child: const Text("Enregistrer"),
                           ),
@@ -912,8 +970,14 @@ class _DepensesScreenState extends State<DepensesScreen> {
                       prefixIcon: const Icon(Icons.search, size: 16),
                       hintText: "Search",
                       hintStyle: const TextStyle(fontSize: 14),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide.none),
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 0,
+                        horizontal: 8,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(6),
+                        borderSide: BorderSide.none,
+                      ),
                       filled: true,
                       fillColor: const Color.fromARGB(255, 238, 242, 255),
                     ),
@@ -929,7 +993,9 @@ class _DepensesScreenState extends State<DepensesScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue.shade400,
                     minimumSize: const Size(80, 36),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                     foregroundColor: Colors.white,
                   ),
                   child: const Text("Filtrer", style: TextStyle(fontSize: 14)),
@@ -940,10 +1006,15 @@ class _DepensesScreenState extends State<DepensesScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.yellow.shade400,
                     minimumSize: const Size(120, 36),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     foregroundColor: Colors.black,
                   ),
-                  child: const Text("Ajouter Dépense", style: TextStyle(fontSize: 14)),
+                  child: const Text(
+                    "Ajouter Dépense",
+                    style: TextStyle(fontSize: 14),
+                  ),
                 ),
               ],
             ),
@@ -957,14 +1028,19 @@ class _DepensesScreenState extends State<DepensesScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (filtreJour != null || filtreMois != null || filtreCategorie != null || searchQuery.isNotEmpty)
+                if (filtreJour != null ||
+                    filtreMois != null ||
+                    filtreCategorie != null ||
+                    searchQuery.isNotEmpty)
                   TextButton.icon(
                     onPressed: () {
                       showDialog(
                         context: context,
                         builder: (ctx) => AlertDialog(
                           title: const Text('Confirmer'),
-                          content: const Text('Voulez-vous vraiment effacer tous les filtres ?'),
+                          content: const Text(
+                            'Voulez-vous vraiment effacer tous les filtres ?',
+                          ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(ctx),
@@ -1000,38 +1076,113 @@ class _DepensesScreenState extends State<DepensesScreen> {
                 child: Column(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 8,
+                      ),
                       decoration: BoxDecoration(
-                        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+                        border: Border(
+                          bottom: BorderSide(color: Colors.grey.shade300),
+                        ),
                       ),
                       child: const Row(
                         children: [
-                          Expanded(flex: 2, child: Text("Categorie", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20), textAlign: TextAlign.center)),
-                          Expanded(flex: 3, child: Text("Description", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20), textAlign: TextAlign.center)),
-                          Expanded(flex: 2, child: Text("Montant", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20), textAlign: TextAlign.center)),
-                          Expanded(flex: 2, child: Text("Date", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20), textAlign: TextAlign.center)),
-                          Expanded(flex: 2, child: Text("Attestation", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20), textAlign: TextAlign.center)),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              "Categorie",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              "Description",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              "Montant",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              "Date",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              "Attestation",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
                           Expanded(flex: 1, child: SizedBox()),
                         ],
                       ),
                     ),
                     Expanded(
                       child: depensesAffichees.isEmpty
-                          ? const Center(child: Text("Aucun résultat. Modifiez ou effacez vos filtres.", style: TextStyle(color: Colors.grey)))
+                          ? const Center(
+                              child: Text(
+                                "Aucun résultat. Modifiez ou effacez vos filtres.",
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            )
                           : ListView.builder(
                               itemCount: depensesAffichees.length,
                               itemBuilder: (context, index) {
                                 final d = depensesAffichees[index];
                                 final isEditing = depenseEnEdition == index;
                                 final isSalary = d.categorie == 'Salaires';
-                                
+
                                 return Container(
-                                  margin: isEditing ? const EdgeInsets.all(4) : EdgeInsets.zero,
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                                  margin: isEditing
+                                      ? const EdgeInsets.all(4)
+                                      : EdgeInsets.zero,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                    horizontal: 8,
+                                  ),
                                   decoration: BoxDecoration(
-                                    border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-                                    color: isEditing ? Colors.blue.withOpacity(0.1) : (isSalary ? Colors.grey.shade50 : Colors.transparent),
-                                    borderRadius: isEditing ? BorderRadius.circular(8) : BorderRadius.zero,
+                                    border: Border(
+                                      bottom: BorderSide(
+                                        color: Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    color: isEditing
+                                        ? Colors.blue.withValues(alpha: 0.1)
+                                        : (isSalary
+                                              ? Colors.grey.shade50
+                                              : Colors.transparent),
+                                    borderRadius: isEditing
+                                        ? BorderRadius.circular(8)
+                                        : BorderRadius.zero,
                                   ),
                                   child: Row(
                                     children: [
@@ -1041,8 +1192,12 @@ class _DepensesScreenState extends State<DepensesScreen> {
                                           d.categorie,
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                            fontWeight: isSalary ? FontWeight.bold : FontWeight.normal,
-                                            color: isSalary ? Colors.blue : Colors.black,
+                                            fontWeight: isSalary
+                                                ? FontWeight.bold
+                                                : FontWeight.normal,
+                                            color: isSalary
+                                                ? Colors.blue
+                                                : Colors.black,
                                           ),
                                         ),
                                       ),
@@ -1052,7 +1207,9 @@ class _DepensesScreenState extends State<DepensesScreen> {
                                           d.description,
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                            fontStyle: isSalary ? FontStyle.italic : FontStyle.normal,
+                                            fontStyle: isSalary
+                                                ? FontStyle.italic
+                                                : FontStyle.normal,
                                           ),
                                         ),
                                       ),
@@ -1063,14 +1220,18 @@ class _DepensesScreenState extends State<DepensesScreen> {
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
                                             fontWeight: FontWeight.w600,
-                                            color: isSalary ? Colors.blue : Colors.black,
+                                            color: isSalary
+                                                ? Colors.blue
+                                                : Colors.black,
                                           ),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text(
-                                          DateFormat('dd/MM/yyyy').format(d.date),
+                                          DateFormat(
+                                            'dd/MM/yyyy',
+                                          ).format(d.date),
                                           textAlign: TextAlign.center,
                                         ),
                                       ),
@@ -1080,24 +1241,39 @@ class _DepensesScreenState extends State<DepensesScreen> {
                                           d.attestation,
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                            fontStyle: isSalary ? FontStyle.italic : FontStyle.normal,
+                                            fontStyle: isSalary
+                                                ? FontStyle.italic
+                                                : FontStyle.normal,
                                           ),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 1,
                                         child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
-                                            if (!isSalary) IconButton(
-                                              onPressed: () => supprimerDepense(index),
-                                              icon: Icon(Icons.delete_outline, size: 20, color: Colors.red.shade400),
-                                            ),
-                                            if (!isSalary) const SizedBox(width: 4),
-                                            if (!isSalary) IconButton(
-                                              onPressed: () => modifierDepense(index),
-                                              icon: const Icon(Icons.edit, size: 20),
-                                            ),
+                                            if (!isSalary)
+                                              IconButton(
+                                                onPressed: () =>
+                                                    supprimerDepense(index),
+                                                icon: Icon(
+                                                  Icons.delete_outline,
+                                                  size: 20,
+                                                  color: Colors.red.shade400,
+                                                ),
+                                              ),
+                                            if (!isSalary)
+                                              const SizedBox(width: 4),
+                                            if (!isSalary)
+                                              IconButton(
+                                                onPressed: () =>
+                                                    modifierDepense(index),
+                                                icon: const Icon(
+                                                  Icons.edit,
+                                                  size: 20,
+                                                ),
+                                              ),
                                           ],
                                         ),
                                       ),

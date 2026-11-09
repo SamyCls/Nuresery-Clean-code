@@ -1,26 +1,24 @@
-// user_dao.dart
 import 'package:sqflite/sqflite.dart';
 import 'database_helper.dart';
-import '/models/utilisateurs.dart'; // Assurez-vous d'avoir ce modèle
+import '/models/utilisateurs.dart';
 
 class UserDao {
-  final DatabaseHelper dbHelper = DatabaseHelper.instance;
+  static const String _tableName = 'users';
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
-  // Créer un utilisateur
   Future<int> insertUser(AppUser user) async {
-    final db = await dbHelper.database;
+    final db = await _dbHelper.database;
     return await db.insert(
-      'users',
+      _tableName,
       user.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-  // Récupérer un utilisateur par son username
   Future<AppUser?> getUserByUsername(String username) async {
-    final db = await dbHelper.database;
+    final db = await _dbHelper.database;
     final maps = await db.query(
-      'users',
+      _tableName,
       where: 'username = ?',
       whereArgs: [username],
     );
@@ -31,39 +29,31 @@ class UserDao {
     return null;
   }
 
-  // Récupérer tous les utilisateurs
   Future<List<AppUser>> getAllUsers() async {
-    final db = await dbHelper.database;
-    final maps = await db.query('users');
+    final db = await _dbHelper.database;
+    final maps = await db.query(_tableName);
     return maps.map((map) => AppUser.fromMap(map)).toList();
   }
 
-  // Mettre à jour un utilisateur
   Future<int> updateUser(AppUser user) async {
-    final db = await dbHelper.database;
+    final db = await _dbHelper.database;
     return await db.update(
-      'users',
+      _tableName,
       user.toMap(),
       where: 'id = ?',
       whereArgs: [user.id],
     );
   }
 
-  // Supprimer un utilisateur
   Future<int> deleteUser(String id) async {
-    final db = await dbHelper.database;
-    return await db.delete(
-      'users',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final db = await _dbHelper.database;
+    return await db.delete(_tableName, where: 'id = ?', whereArgs: [id]);
   }
 
-  // Vérifier les credentials de connexion
   Future<AppUser?> authenticate(String username, String password) async {
-    final db = await dbHelper.database;
+    final db = await _dbHelper.database;
     final maps = await db.query(
-      'users',
+      _tableName,
       where: 'username = ? AND password = ?',
       whereArgs: [username, password],
     );

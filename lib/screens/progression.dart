@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:creche_manager/db/evaluationdao.dart';
 import 'package:creche_manager/models/enfant.dart';
- 
+
 class EvaluationPage extends StatefulWidget {
   final Enfant enfant; // Objet enfant au lieu de juste l'ID
 
@@ -72,16 +72,16 @@ class _EvaluationPageState extends State<EvaluationPage> {
 
   Future<void> _loadEvaluations() async {
     setState(() => _isLoading = true);
-    
+
     try {
       // Clear previous values
       _initializeControllers();
-      
+
       // Load evaluations for the selected month
       final evals = await evaluationDao.getEvaluationsByMonth(
-        widget.enfant.id, 
-        _selectedDate.year, 
-        _selectedDate.month
+        widget.enfant.id,
+        _selectedDate.year,
+        _selectedDate.month,
       );
 
       for (var e in evals) {
@@ -99,19 +99,21 @@ class _EvaluationPageState extends State<EvaluationPage> {
         });
       }
     } catch (e) {
-      print("Error loading evaluations: $e");
+      debugPrint("Error loading evaluations: $e");
     }
-    
-    setState(() => _isLoading = false);
+
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _saveEvaluations() async {
     try {
       // Clear existing evaluations for this month and child
       await evaluationDao.clearEvaluationsForMonth(
-        widget.enfant.id, 
+        widget.enfant.id,
         _selectedDate.year,
-        _selectedDate.month
+        _selectedDate.month,
       );
 
       for (var section in sections.values) {
@@ -152,7 +154,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
       lastDate: DateTime(2030),
       initialDatePickerMode: DatePickerMode.year,
     );
-    
+
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
@@ -182,13 +184,21 @@ class _EvaluationPageState extends State<EvaluationPage> {
 
   String _getMonthName(int month) {
     const months = [
-      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+      'Janvier',
+      'Février',
+      'Mars',
+      'Avril',
+      'Mai',
+      'Juin',
+      'Juillet',
+      'Août',
+      'Septembre',
+      'Octobre',
+      'Novembre',
+      'Décembre',
     ];
     return months[month - 1];
   }
-
-  
 
   // Widget personnalisé pour la case "Vrai" avec ✅
   Widget _buildTrueCheckbox(String item) {
@@ -236,13 +246,15 @@ class _EvaluationPageState extends State<EvaluationPage> {
           color: checkFalse[item] == true ? Colors.red : Colors.transparent,
         ),
         child: checkFalse[item] == true
-            ? const Text("X",
+            ? const Text(
+                "X",
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
-                textAlign: TextAlign.center)
+                textAlign: TextAlign.center,
+              )
             : null,
       ),
     );
@@ -295,10 +307,7 @@ class _EvaluationPageState extends State<EvaluationPage> {
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _saveEvaluations,
-          ),
+          IconButton(icon: const Icon(Icons.save), onPressed: _saveEvaluations),
         ],
       ),
       body: _isLoading
@@ -348,8 +357,11 @@ class _EvaluationPageState extends State<EvaluationPage> {
                                               decoration: const InputDecoration(
                                                 border: OutlineInputBorder(),
                                                 isDense: true,
-                                                contentPadding: EdgeInsets.symmetric(
-                                                    horizontal: 6, vertical: 4),
+                                                contentPadding:
+                                                    EdgeInsets.symmetric(
+                                                      horizontal: 6,
+                                                      vertical: 4,
+                                                    ),
                                               ),
                                             ),
                                           ),
@@ -358,13 +370,9 @@ class _EvaluationPageState extends State<EvaluationPage> {
                                     : Text(item),
                               ),
                               // Vrai checkbox (gauche) avec ✅
-                              Center(
-                                child: _buildTrueCheckbox(item),
-                              ),
+                              Center(child: _buildTrueCheckbox(item)),
                               // X checkbox (droite) avec X
-                              Center(
-                                child: _buildFalseCheckbox(item),
-                              ),
+                              Center(child: _buildFalseCheckbox(item)),
                             ],
                           );
                         }).toList(),
